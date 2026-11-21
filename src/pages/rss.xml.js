@@ -20,6 +20,6 @@ export async function GET(context) {
       pubDate: post.data.date,
       link: postPath(post.id),
     })),
-    customData: `<language>zh-CN</language><lastBuildDate>${new Date().toUTCString()}</lastBuildDate>`,
+    customData: '<language>zh-CN</language>',
   });
 }

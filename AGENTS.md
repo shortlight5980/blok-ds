@@ -11,7 +11,7 @@
 - Astro：静态输出，不使用客户端框架。
 - 内容：`src/content/posts/*.md`，由 Astro Content Collections 管理。
 - 样式：原生 CSS（`src/styles/global.css`），不引入 UI 框架、CSS-in-JS 或远程字体。
-- 部署：构建产物发布到 `gh-pages` 分支，由 GitHub Pages 托管；自动部署工作流见设计文档。
+- 部署：构建产物发布到 `gh-pages` 分支，由 GitHub Pages 托管；自动部署为后续项，见设计文档 §11.3。
 - 包管理：pnpm；Node.js 22（>=22.23.4，见 `package.json` 的 `engines`）。
 
 ## 常用命令
@@ -23,7 +23,7 @@ pnpm build            # 构建到 dist/
 pnpm preview          # 预览构建产物
 ```
 
-`pnpm build` 必须通过；改动完成前在本地跑一次。
+`pnpm build` 必须通过；改动完成前在本地跑一次。发布到 Pages 的构建需要额外注入 `SITE` / `BASE_PATH`，见 README 的部署一节。
 
 ## 目录结构
 

@@ -191,7 +191,7 @@ URL 规范：构建配置 `trailingSlash: 'always'`，页面地址以 `/` 结尾
 
 - 内容宽度：`42rem`；移动端左右留白 1.25rem。
 - 正文字号 1.0625rem（17px），行高 1.8，适合中文长文阅读。
-- 标题使用衬线栈（Noto Serif SC / Songti SC / Georgia），正文使用系统无衬线栈，日期与代码使用等宽栈。
+- 标题使用衬线栈（Noto Serif SC / Noto Serif CJK SC / Songti SC / SimSun / Georgia），正文使用系统无衬线栈，日期与代码使用等宽栈。
 - 不使用远程字体，避免闪烁、隐私与额外请求。
 
 ### 9.2 颜色与主题
@@ -203,10 +203,12 @@ URL 规范：构建配置 `trailingSlash: 'always'`，页面地址以 `/` 结尾
 | `--bg` | `#fcfbf8` | `#171614` | 背景 |
 | `--fg` | `#23211e` | `#e6e1d8` | 正文 |
 | `--muted` | `#726c62` | `#a39c91` | 次要文字 |
-| `--faint` | `#9b948a` | `#7c756b` | 日期、页脚 |
+| `--faint` | `#746e64` | `#8a8379` | 日期、页脚（对比度 ≥ 4.5:1） |
 | `--rule` | `#e8e3da` | `#2d2a26` | 分隔线 |
 | `--accent` | `#a8502d` | `#d98b6a` | 链接、焦点 |
 | `--code-bg` | `#f3efe7` | `#201e1b` | 行内代码与代码块 |
+
+日期与页脚使用 `--faint`；浅色/深色主题下对背景的对比度分别约为 4.88:1 与 4.83:1，满足 WCAG AA（小字号 4.5:1）。
 
 ### 9.3 交互与动效
 
@@ -245,6 +247,8 @@ pnpm build     # 产物写入 dist/
 pnpm preview   # 预览 dist/
 ```
 
+发布构建使用 `BASE_PATH=/blok-ds`；预览构建产物时同样需要该变量：`BASE_PATH=/blok-ds pnpm preview`。
+
 ### 10.3 产物
 
 - `dist/` 为纯静态文件，不提交到 `main`；发布时提交到 `gh-pages` 分支。
@@ -259,7 +263,7 @@ pnpm preview   # 预览 dist/
 - 源分支保持 `main` 干净，`dist/` 不进入 `main`。
 - `gh-pages` 分支只包含构建产物（HTML、`_astro/` 资源、`rss.xml`、`favicon.svg`、`.nojekyll`）。
 - `public/.nojekyll` 随构建复制到产物根目录，阻止 Pages 的 Jekyll 处理，确保 `_astro/` 不被忽略。
-- 发布流程：`pnpm build` → 把 `dist/` 内容更新到 `gh-pages` 分支 → push。
+- 发布流程：`SITE=https://shortlight5980.github.io BASE_PATH=/blok-ds pnpm build` → 用 `rsync -a --delete --exclude=.git dist/ <worktree>/` 更新 `gh-pages` 分支 → push。`--exclude=.git` 用于保留 worktree 的 `.git` 文件。
 
 ### 11.2 首次启用（维护者操作）
 
@@ -337,7 +341,7 @@ jobs:
 | 构建 | 提交前本地执行 `pnpm install --frozen-lockfile && pnpm build`；添加 Actions 后作为 PR 检查 |
 | 内容校验 | frontmatter schema 在构建时校验，缺字段即失败 |
 | 链接 | 构建后抽查站内路径与 base path；后续可加自动链接检查 |
-| 可访问性 | 语义化标签、`lang`、焦点可见、对比度、键盘走查 |
+| 可访问性 | 语义化标签、`lang`、焦点可见、对比度（含 `--faint` 日期/页脚）、键盘走查 |
 | 响应式 | 320px / 520px / 桌面视口检查 |
 | 主题 | 浅色、深色、系统偏好分别检查 |
 | 视觉回归 | UI 改动附前后对比截图（基线、视口、主题写明） |
@@ -346,7 +350,7 @@ jobs:
 
 ## 13. SEO 与 RSS
 
-- 每页输出 `<title>`、`description`、canonical、`og:*`、`twitter:card`。
+- 每页（404 除外）输出 `<title>`、`description`、canonical、`og:*`、`twitter:card`；404 输出 `noindex`。
 - `html lang="zh-CN"`。
 - RSS 输出全部已发布文章，包含标题、链接、日期、可选描述；`<language>zh-CN</language>`。
 - 默认不引入统计脚本；访问分析如有需要由维护者决定并单独评估隐私影响。
@@ -383,7 +387,7 @@ jobs:
 - 仓库文档体系：`AGENTS.md`、`.agents/`（协作、通信、流程、模板、设计、ADR）。
 - 可构建的 Astro 骨架：首页、文章页、RSS、404、示例文章、全站样式与 favicon。
 - `gh-pages` 初始构建产物、README、`.gitignore`、lockfile。
-- 本地 `pnpm build` 与构建产物检查。
+- 本地 `pnpm build`、base path 构建与产物检查；发布命令、日期/页脚对比度与 RSS 可复现性已按 review 修正。
 
 待维护者完成 / 确认：
 

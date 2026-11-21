@@ -13,6 +13,8 @@ pnpm build            # 构建到 dist/
 pnpm preview          # 预览构建产物
 ```
 
+`pnpm preview` 预览构建产物；若构建时使用了 `BASE_PATH=/blok-ds`，预览也要带同样变量。
+
 ## 写文章
 
 在 `src/content/posts/` 下新建 Markdown 文件：
@@ -35,17 +37,20 @@ tags: []
 站点是纯静态产物，发布到 `gh-pages` 分支，由 GitHub Pages 直接托管。
 
 1. 维护者在仓库 **Settings → Pages** 选择 **Deploy from a branch**，分支 `gh-pages`，目录 `/ (root)`。
-2. 构建并更新发布分支：
+2. 构建并更新发布分支（默认项目站点使用 `/blok-ds/` 作为 base）：
 
    ```bash
-   pnpm build
+   SITE=https://shortlight5980.github.io BASE_PATH=/blok-ds pnpm build
    git fetch origin gh-pages
    git worktree add /tmp/blok-ds-pages origin/gh-pages
-   rsync -a --delete dist/ /tmp/blok-ds-pages/
+   rsync -a --delete --exclude=.git dist/ /tmp/blok-ds-pages/
    git -C /tmp/blok-ds-pages add -A
    git -C /tmp/blok-ds-pages commit -m "deploy: 更新站点"
    git -C /tmp/blok-ds-pages push origin HEAD:gh-pages
+   git worktree remove --force /tmp/blok-ds-pages
    ```
+
+   `SITE` / `BASE_PATH` 必须与最终访问地址一致；换成用户主页或自定义域名时修改后重新构建。`rsync` 的 `--exclude=.git` 不能省略，否则会删掉 worktree 的 `.git` 文件；worktree 用完请移除，避免下次 `git worktree add` 失败。
 
 3. 站点地址默认为 `https://<user>.github.io/blok-ds/`。
 
