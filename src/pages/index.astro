@@ -6,13 +6,11 @@ import { formatDate, postPath } from '../lib/site';
 const posts = await getPosts();
 ---
 
-<BaseLayout>
-  <h1 class="sr-only">文章</h1>
-
+<BaseLayout home>
   {posts.length === 0 ? (
     <p class="empty">还没有文章。</p>
   ) : (
-    <ul class="post-list">
+    <ul class="post-list" aria-label="文章列表">
       {posts.map((post) => (
         <li>
           <a href={postPath(post.id)}>{post.data.title}</a>
