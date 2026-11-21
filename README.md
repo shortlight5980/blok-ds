@@ -41,10 +41,10 @@ tags: []
    pnpm build
    git fetch origin gh-pages
    git worktree add /tmp/blok-ds-pages origin/gh-pages
-   cp -r dist/. /tmp/blok-ds-pages/
+   rsync -a --delete dist/ /tmp/blok-ds-pages/
    git -C /tmp/blok-ds-pages add -A
    git -C /tmp/blok-ds-pages commit -m "deploy: 更新站点"
-   git -C /tmp/blok-ds-pages push origin gh-pages
+   git -C /tmp/blok-ds-pages push origin HEAD:gh-pages
    ```
 
 3. 站点地址默认为 `https://<user>.github.io/blok-ds/`。
