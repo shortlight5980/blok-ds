@@ -36,8 +36,11 @@ tags: []
 
 站点是纯静态产物，发布到 `gh-pages` 分支；启用 Pages 后由 GitHub Pages 直接托管。
 
+推送 `main` 后，[`.github/workflows/main.yml`](.github/workflows/main.yml) 会自动构建并把 `dist/` 更新到 `gh-pages`；也可以在 Actions 页面手动触发 `workflow_dispatch`。workflow 使用 `SITE=https://<owner>.github.io` 与 `BASE_PATH=/<repo>` 构建，提交作者为 `github-actions[bot]`，不需要把 Pages Source 切换为 **GitHub Actions**。
+
 1. 维护者在仓库 **Settings → Pages** 选择 **Deploy from a branch**，分支 `gh-pages`，目录 `/ (root)`。
-2. 构建并更新发布分支（默认项目站点使用 `/blok-ds/` 作为 base）：
+2. 等 workflow 完成；站点地址默认为 `https://<user>.github.io/blok-ds/`。
+3. 如需手动发布（例如调整构建参数），按下面的命令更新 `gh-pages`：
 
    ```bash
    set -e
@@ -53,9 +56,7 @@ tags: []
 
    `SITE` / `BASE_PATH` 必须与最终访问地址一致；换成用户主页或自定义域名时修改后重新构建。`rsync` 的 `--exclude=.git` 不能省略，否则会删掉 worktree 的 `.git` 文件；worktree 用完请移除，避免下次 `git worktree add` 失败。`set -e` 会在 push 失败时保留 worktree 与发布提交，便于排查后重推。
 
-3. 站点地址默认为 `https://<user>.github.io/blok-ds/`。
-
-`public/.nojekyll` 会随构建进入产物，避免 Jekyll 忽略 `_astro/` 资源。如果希望在推送 `main` 后自动部署，可按 [设计文档 §11](.agents/design/initial-design.md#11-部署) 添加 GitHub Actions 工作流，并把 Pages Source 切换为 **GitHub Actions**。
+`public/.nojekyll` 会随构建进入产物，避免 Jekyll 忽略 `_astro/` 资源。
 
 仓库是私有仓库，Pages 是否可用取决于账户计划。
 
@@ -65,3 +66,4 @@ tags: []
 - [.agents/README.md](.agents/README.md)：开发文档、协作与通信约定索引
 - [.agents/design/initial-design.md](.agents/design/initial-design.md)：初始技术设计
 - [.agents/decisions/0001-static-site-stack.md](.agents/decisions/0001-static-site-stack.md)：技术栈决策记录
+- [.agents/decisions/0002-gh-pages-deploy.md](.agents/decisions/0002-gh-pages-deploy.md)：自动部署决策记录

@@ -175,9 +175,9 @@ GitHub Pages
 
 视觉结构：
 
-- 页头：站点名（左侧）+「文章 / RSS」（右侧）。
-- 首页：只列文章标题与日期，无摘要、无卡片、无分页（文章量增长后再评估）。
-- 文章页：标题、日期、正文、返回列表。
+- 页头：目录页（首页）与 404 显示站点名、站点简介与「文章 / RSS」；文章页不显示站点页头。
+- 首页：文章标题与日期，按日期倒序，条目之间用 1px `--rule` 分隔线隔开；无摘要、无卡片、无分页（文章量增长后再评估）。
+- 文章页：标题、日期、正文、返回列表；不重复站点页头，直接从标题开始。
 - 页脚：版权年份 + RSS。
 - 初版不设「关于」页；需要时按维护者提供的内容新增。
 
@@ -263,7 +263,7 @@ pnpm preview   # 预览 dist/
 - 源分支保持 `main` 干净，`dist/` 不进入 `main`。
 - `gh-pages` 分支只包含构建产物（HTML、`_astro/` 资源、`rss.xml`、`favicon.svg`、`.nojekyll`）。
 - `public/.nojekyll` 随构建复制到产物根目录，阻止 Pages 的 Jekyll 处理，确保 `_astro/` 不被忽略。
-- 发布流程：`SITE=https://shortlight5980.github.io BASE_PATH=/blok-ds pnpm build` → 用 `rsync -a --delete --exclude=.git dist/ <worktree>/` 更新 `gh-pages` 分支 → push。`--exclude=.git` 用于保留 worktree 的 `.git` 文件。
+- 发布流程（手动）：`SITE=https://shortlight5980.github.io BASE_PATH=/blok-ds pnpm build` → 用 `rsync -a --delete --exclude=.git dist/ <worktree>/` 更新 `gh-pages` 分支 → push。`--exclude=.git` 用于保留 worktree 的 `.git` 文件。自动部署见 §11.3。
 
 ### 11.2 首次启用（维护者操作）
 
@@ -272,9 +272,9 @@ pnpm preview   # 预览 dist/
 3. 如私有仓库不可用 Pages，需要调整账户计划或仓库可见性；这是仓库设置决定，agent 不擅自修改。
 4. 站点默认为 `https://<user>.github.io/blok-ds/`，项目路径由构建时的 `BASE_PATH` 决定。
 
-### 11.3 自动部署（后续）
+### 11.3 自动部署（gh-pages）
 
-站点稳定后，可以用 GitHub Actions 取代手动更新 `gh-pages`。目标工作流：
+推送 `main` 或手动触发时，`.github/workflows/main.yml` 构建站点并把 `dist/` 更新到 `gh-pages` 分支；Pages 继续使用 **Deploy from a branch**（`gh-pages`），不需要切换为 GitHub Actions。
 
 ```yaml
 name: Deploy to GitHub Pages
@@ -285,16 +285,14 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
   group: pages
   cancel-in-progress: false
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -305,40 +303,43 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-      - id: pages
-        uses: actions/configure-pages@v5
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
         env:
-          SITE: ${{ steps.pages.outputs.origin }}
-          BASE_PATH: ${{ steps.pages.outputs.base_path }}
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+          SITE: https://${{ github.repository_owner }}.github.io
+          BASE_PATH: /${{ github.event.repository.name }}
+      - name: Publish to gh-pages
+        run: |
+          set -euo pipefail
+          git fetch origin gh-pages
+          git worktree add /tmp/gh-pages FETCH_HEAD
+          rsync -a --delete --exclude=.git dist/ /tmp/gh-pages/
+          git -C /tmp/gh-pages add -A
+          if git -C /tmp/gh-pages diff --cached --quiet; then
+            echo "No changes to deploy."
+          else
+            git -C /tmp/gh-pages \
+              -c user.name='github-actions[bot]' \
+              -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+              commit -m 'deploy: 更新站点'
+            git -C /tmp/gh-pages push origin HEAD:gh-pages
+          fi
+          git worktree remove --force /tmp/gh-pages
 ```
 
-`configure-pages` 提供 `origin` 与 `base_path`，切换项目站点、用户主页或自定义域名时不需要修改源码链接。启用后把 Pages Source 改为 **GitHub Actions**，`gh-pages` 分支可停用。PR 构建检查可以另加一个只执行 `pnpm build` 的工作流。
+workflow 使用 `SITE=https://<owner>.github.io` 与 `BASE_PATH=/<repo>` 构建；换成用户主页或自定义域名时修改这两项。部署提交由 `github-actions[bot]` 创建，`gh-pages` 分支只保留构建产物。PR 构建检查可以另加一个只执行 `pnpm build` 的工作流；当前 workflow 只在 `main` 或手动触发时运行。
 
 ### 11.4 回滚
 
-- 页面内容问题：revert 对应源提交，重新构建并更新 `gh-pages`。
-- 若已启用 Actions：重跑上一次成功的部署，或 revert 引入问题的提交。
+- 页面内容问题：revert 对应源提交，重新运行 workflow（或按 §11.1 手动更新 `gh-pages`）。
+- 部署失败：检查 workflow 日志；修复后重新运行，必要时手动更新 `gh-pages`。
 - 不在失败状态下继续叠加改动。
 
 ## 12. 质量保障
 
 | 项目 | 方式 |
 | --- | --- |
-| 构建 | 提交前本地执行 `pnpm install --frozen-lockfile && pnpm build`；添加 Actions 后作为 PR 检查 |
+| 构建 | 提交前本地执行 `pnpm install --frozen-lockfile && pnpm build`；部署 workflow 在 `main` 上再次构建 |
 | 内容校验 | frontmatter schema 在构建时校验，缺字段即失败 |
 | 链接 | 构建后抽查站内路径与 base path；后续可加自动链接检查 |
 | 可访问性 | 语义化标签、`lang`、焦点可见、对比度（含 `--faint` 日期/页脚）、键盘走查 |
@@ -363,7 +364,7 @@ jobs:
 1. **文内图片**：引入 `src/assets` + Astro 资源组件或 MDX，确保子路径部署下 URL 正确；同时考虑图片压缩与懒加载。
 2. **标签页**：`tags` 已预留；增加 `/tags/<tag>/` 与标签索引。
 3. **关于页**：维护者提供内容后新增，保持同一排版体系。
-4. **自定义域名**：启用后重新构建，注入正确的 `SITE`/`BASE_PATH`（或由 Actions configure-pages 提供）；补充 CNAME 与 HTTPS 检查。
+4. **自定义域名**：启用后调整 workflow / 构建命令中的 `SITE`/`BASE_PATH`，补充 CNAME 与 HTTPS 检查。
 5. **sitemap / OG 图片**：提升分享与索引质量。
 6. **评论**：只考虑无账号、低脚本的方案，并明确隐私与维护成本；默认不做。
 7. **搜索**：文章量明显增长后再考虑静态索引，不提前引入。
@@ -388,10 +389,11 @@ jobs:
 - 可构建的 Astro 骨架：首页、文章页、RSS、404、示例文章、全站样式与 favicon。
 - `gh-pages` 初始构建产物、README、`.gitignore`、lockfile。
 - 本地 `pnpm build`、base path 构建与产物检查；发布命令、日期/页脚对比度与 RSS 可复现性已按 review 修正。
+- 自动部署 workflow：推送 `main` 或手动触发时构建并更新 `gh-pages`。
 
 待维护者完成 / 确认：
 
 - 在仓库设置中启用 GitHub Pages（Deploy from a branch → `gh-pages` / root）。
-- 如需自动部署，按 §11.3 添加 Actions 工作流并把 Source 切换为 GitHub Actions。
+- 确认自动部署 workflow：推送 `main` 后会自动构建并更新 `gh-pages`，不需要把 Pages Source 切换为 GitHub Actions。
 - 确认站点名称、简介与视觉方向；必要时调整 `src/consts.ts` 与 `global.css`。
 - 决定是否使用自定义域名、评论、统计等外部能力。

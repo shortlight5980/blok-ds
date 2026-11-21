@@ -8,9 +8,20 @@ interface Props {
   description?: string;
   noindex?: boolean;
   type?: 'website' | 'article';
+  /** 目录页（首页）把站点名作为页面标题，并显示站点简介。 */
+  home?: boolean;
+  /** 文章页隐藏站点页头，直接从文章标题开始。 */
+  header?: boolean;
 }
 
-const { title, description = SITE_DESCRIPTION, noindex = false, type = 'website' } = Astro.props;
+const {
+  title,
+  description = SITE_DESCRIPTION,
+  noindex = false,
+  type = 'website',
+  home = false,
+  header = true,
+} = Astro.props;
 const pageTitle = title ? `${title} · ${SITE_TITLE}` : SITE_TITLE;
 const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url);
 const rssUrl = new URL(url('/rss.xml'), Astro.site ?? Astro.url);
@@ -36,14 +47,23 @@ const rssUrl = new URL(url('/rss.xml'), Astro.site ?? Astro.url);
     <meta name="generator" content={Astro.generator} />
   </head>
   <body>
-    <div class="site">
-      <header class="site-header">
-        <a class="site-title" href={url('/')}>{SITE_TITLE}</a>
-        <nav aria-label="站点导航">
-          <a href={url('/')}>文章</a>
-          <a href={url('/rss.xml')}>RSS</a>
-        </nav>
-      </header>
+    <div class={header ? 'site' : 'site site--no-header'}>
+      {header && (
+        <header class="site-header">
+          <div class="site-identity">
+            {home ? (
+              <h1 class="site-title">{SITE_TITLE}</h1>
+            ) : (
+              <a class="site-title" href={url('/')}>{SITE_TITLE}</a>
+            )}
+            <p class="site-description">{SITE_DESCRIPTION}</p>
+          </div>
+          <nav aria-label="站点导航">
+            <a href={url('/')}>文章</a>
+            <a href={url('/rss.xml')}>RSS</a>
+          </nav>
+        </header>
+      )}
 
       <main>
         <slot />
