@@ -1,5 +1,7 @@
 # blok-ds
 
+**本项目用于测试 DeepSeek Super Agent。**
+
 shortlight5980 的个人博客。纯静态站点，使用 Astro 构建，部署目标为 GitHub Pages。
 
 ## 本地开发
