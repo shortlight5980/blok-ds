@@ -1,0 +1,12 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { url } from '../lib/site';
+---
+
+<BaseLayout title="404" noindex>
+  <section class="not-found">
+    <p class="not-found-code">404</p>
+    <p>这一页不存在。</p>
+    <a href={url('/')}>返回首页 →</a>
+  </section>
+</BaseLayout>

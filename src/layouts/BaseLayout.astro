@@ -1,0 +1,57 @@
+---
+import { SITE_TITLE, SITE_DESCRIPTION, SITE_LANG, AUTHOR } from '../consts';
+import { url } from '../lib/site';
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+  noindex?: boolean;
+}
+
+const { title, description = SITE_DESCRIPTION, noindex = false } = Astro.props;
+const pageTitle = title ? `${title} · ${SITE_TITLE}` : SITE_TITLE;
+const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url);
+const rssUrl = new URL(url('/rss.xml'), Astro.site ?? Astro.url);
+---
+
+<!doctype html>
+<html lang={SITE_LANG}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <meta name="author" content={AUTHOR} />
+    {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
+    <link rel="icon" href={url('/favicon.svg')} type="image/svg+xml" />
+    <link rel="alternate" type="application/rss+xml" title={SITE_TITLE} href={rssUrl} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:site_name" content={SITE_TITLE} />
+    <meta name="twitter:card" content="summary" />
+    <meta name="generator" content={Astro.generator} />
+  </head>
+  <body>
+    <div class="site">
+      <header class="site-header">
+        <a class="site-title" href={url('/')}>{SITE_TITLE}</a>
+        <nav aria-label="站点导航">
+          <a href={url('/')}>文章</a>
+          <a href={url('/rss.xml')}>RSS</a>
+        </nav>
+      </header>
+
+      <main>
+        <slot />
+      </main>
+
+      <footer class="site-footer">
+        <span>© {new Date().getFullYear()} {SITE_TITLE}</span>
+        <a href={url('/rss.xml')}>RSS</a>
+      </footer>
+    </div>
+  </body>
+</html>
