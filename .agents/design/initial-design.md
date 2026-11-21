@@ -7,7 +7,7 @@
 
 ## 1. 摘要
 
-`blok-ds` 是维护者的个人博客。站点由 Astro 在构建时生成纯静态文件：文章是仓库里的 Markdown，首页、文章页、RSS 与 404 预渲染为 HTML，产物发布到 `gh-pages` 分支，由 GitHub Pages 托管。运行时不依赖服务器、数据库、第三方 CMS 或客户端 JavaScript，视觉上以排版、留白与克制的颜色为主。
+`blok-ds` 是维护者的个人博客。站点由 Astro 在构建时生成纯静态文件：文章是仓库里的 Markdown，首页、文章页、RSS 与 404 预渲染为 HTML，产物发布到 `gh-pages` 分支；启用 Pages 后由 GitHub Pages 托管。运行时不依赖服务器、数据库、第三方 CMS 或客户端 JavaScript，视觉上以排版、留白与克制的颜色为主。
 
 本次初始化提供可运行的骨架：一篇示例文章、首页列表、文章详情、RSS、404、全站样式、`gh-pages` 初始产物，以及 `.agents/` 下的协作与设计文档。
 
@@ -34,7 +34,7 @@
 | --- | --- |
 | 内容 | Markdown 文章存放在仓库；无外部内容源 |
 | 展示 | 简洁、留白、解释性文字少；桌面与移动端都可读 |
-| 部署 | 构建产物发布到 `gh-pages` 分支，由 GitHub Pages 托管 |
+| 部署 | 构建产物发布到 `gh-pages` 分支；启用 Pages 后由 GitHub Pages 托管 |
 | 运行环境 | 纯静态 HTML/CSS；默认零客户端 JS |
 | 路径 | 项目站点可能位于 `/<repo>/` 子路径，链接与资源必须适配 base path |
 | 可访问性 | 语义化结构、键盘可操作、焦点可见、对比度足够 |
@@ -206,9 +206,9 @@ URL 规范：构建配置 `trailingSlash: 'always'`，页面地址以 `/` 结尾
 | `--faint` | `#746e64` | `#8a8379` | 日期、页脚（对比度 ≥ 4.5:1） |
 | `--rule` | `#e8e3da` | `#2d2a26` | 分隔线 |
 | `--accent` | `#a8502d` | `#d98b6a` | 链接、焦点 |
-| `--code-bg` | `#f3efe7` | `#201e1b` | 行内代码与代码块 |
+| `--code-bg` | `#f6f3ec` | `#201e1b` | 行内代码与代码块 |
 
-日期与页脚使用 `--faint`；浅色/深色主题下对背景的对比度分别约为 4.88:1 与 4.83:1，满足 WCAG AA（小字号 4.5:1）。
+日期与页脚使用 `--faint`；浅色/深色主题下对背景的对比度分别约为 4.88:1 与 4.83:1，满足 WCAG AA（小字号 4.5:1）。代码高亮使用 `github-light-high-contrast` / `github-dark-high-contrast`，浅色代码背景为 `#f6f3ec`，代表性 token 在代码背景上的对比度均 ≥ 4.5:1。
 
 ### 9.3 交互与动效
 
@@ -258,7 +258,7 @@ pnpm preview   # 预览 dist/
 
 ### 11.1 初始方案：`gh-pages` 分支
 
-站点产物发布到独立的 `gh-pages` 分支，由 GitHub Pages 直接托管，不需要服务器：
+站点产物发布到独立的 `gh-pages` 分支；启用 Pages 后由 GitHub Pages 直接托管，不需要服务器：
 
 - 源分支保持 `main` 干净，`dist/` 不进入 `main`。
 - `gh-pages` 分支只包含构建产物（HTML、`_astro/` 资源、`rss.xml`、`favicon.svg`、`.nojekyll`）。
@@ -350,7 +350,7 @@ jobs:
 
 ## 13. SEO 与 RSS
 
-- 每页（404 除外）输出 `<title>`、`description`、canonical、`og:*`、`twitter:card`；404 输出 `noindex`。
+- 每页输出 `<title>`、`description`、`og:*`、`twitter:card`；404 输出 `noindex`，不输出 canonical 与 `og:url`（仍保留 `og:type` / `og:title` / `og:description` / `og:site_name`）。
 - `html lang="zh-CN"`。
 - RSS 输出全部已发布文章，包含标题、链接、日期、可选描述；`<language>zh-CN</language>`。
 - 默认不引入统计脚本；访问分析如有需要由维护者决定并单独评估隐私影响。

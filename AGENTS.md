@@ -4,14 +4,14 @@
 
 ## 仓库是什么
 
-`blok-ds` 是 shortlight5980 的个人博客：纯静态站点，部署在 GitHub Pages。风格简洁、留白充足、解释性文字少；文章是仓库里的 Markdown 文件，不接 CMS 或数据库。
+`blok-ds` 是 shortlight5980 的个人博客：纯静态站点，部署目标为 GitHub Pages（启用后）。风格简洁、留白充足、解释性文字少；文章是仓库里的 Markdown 文件，不接 CMS 或数据库。
 
 ## 技术栈
 
 - Astro：静态输出，不使用客户端框架。
 - 内容：`src/content/posts/*.md`，由 Astro Content Collections 管理。
 - 样式：原生 CSS（`src/styles/global.css`），不引入 UI 框架、CSS-in-JS 或远程字体。
-- 部署：构建产物发布到 `gh-pages` 分支，由 GitHub Pages 托管；自动部署为后续项，见设计文档 §11.3。
+- 部署：构建产物发布到 `gh-pages` 分支，启用 Pages 后由 GitHub Pages 托管；自动部署为后续项，见设计文档 §11.3。
 - 包管理：pnpm；Node.js 22（>=22.23.4，见 `package.json` 的 `engines`）。
 
 ## 常用命令
