@@ -3,21 +3,33 @@ import { render, type CollectionEntry } from 'astro:content';
 import { AUTHOR, AUTHOR_TAGLINE } from '../../consts';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getPosts } from '../../lib/posts';
-import { formatDate, url } from '../../lib/site';
+import { formatDate, postPath, url } from '../../lib/site';
 
 export async function getStaticPaths() {
   const posts = await getPosts();
-  return posts.map((post) => ({
-    params: { slug: post.id },
-    props: { post },
-  }));
+  const publishedPosts = posts.filter((post) => !post.data.draft);
+  const publishedIndexes = new Map(publishedPosts.map((post, index) => [post.id, index]));
+
+  return posts.map((post) => {
+    const index = publishedIndexes.get(post.id);
+    return {
+      params: { slug: post.id },
+      props: {
+        post,
+        previousPost: index === undefined ? undefined : publishedPosts[index - 1],
+        nextPost: index === undefined ? undefined : publishedPosts[index + 1],
+      },
+    };
+  });
 }
 
 interface Props {
   post: CollectionEntry<'posts'>;
+  previousPost?: CollectionEntry<'posts'>;
+  nextPost?: CollectionEntry<'posts'>;
 }
 
-const { post } = Astro.props;
+const { post, previousPost, nextPost } = Astro.props;
 const { date, updatedDate } = post.data;
 const { Content, headings } = await render(post);
 const sections = headings.filter(({ depth }) => depth === 2);
@@ -52,6 +64,27 @@ const sections = headings.filter(({ depth }) => depth === 2);
     <div class="prose">
       <Content />
     </div>
+
+    {(previousPost || nextPost) && (
+      <nav class="post-neighbors" aria-label="相邻文章">
+        {previousPost ? (
+          <a class="post-neighbor" href={postPath(previousPost.id)}>
+            <span class="post-neighbor-label">上一篇</span>
+            <span class="post-neighbor-title">{previousPost.data.title}</span>
+          </a>
+        ) : (
+          <span aria-hidden="true"></span>
+        )}
+        {nextPost ? (
+          <a class="post-neighbor post-neighbor--next" href={postPath(nextPost.id)}>
+            <span class="post-neighbor-label">下一篇</span>
+            <span class="post-neighbor-title">{nextPost.data.title}</span>
+          </a>
+        ) : (
+          <span aria-hidden="true"></span>
+        )}
+      </nav>
+    )}
 
     <p class="post-back"><a href={url('/')}>← 返回文章列表</a></p>
   </article>
