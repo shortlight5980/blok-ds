@@ -285,6 +285,24 @@ main {
   padding-inline-start: 1.4em;
 }
 
+@media (min-width: 80rem) {
+  .post-body--with-toc {
+    --post-toc-width: 14rem;
+    --post-toc-gap: 2rem;
+
+    display: grid;
+    grid-template-columns: var(--post-toc-width) minmax(0, 1fr);
+    column-gap: var(--post-toc-gap);
+    align-items: start;
+    /* 目录使用左侧留白，正文仍与文章标题对齐。 */
+    margin-inline-start: calc(-1 * (var(--post-toc-width) + var(--post-toc-gap)));
+  }
+
+  .post-body--with-toc > .post-toc {
+    margin-bottom: 0;
+  }
+}
+
 .prose > :first-child {
   margin-top: 0;
 }
@@ -305,6 +323,10 @@ main {
   font-size: 1.3rem;
   font-weight: 600;
   line-height: 1.5;
+}
+
+.post-body--with-toc .prose h2 {
+  overflow-wrap: anywhere;
 }
 
 .prose h3 {
