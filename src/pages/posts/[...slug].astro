@@ -18,7 +18,8 @@ interface Props {
 }
 
 const { post } = Astro.props;
-const { Content } = await render(post);
+const { Content, headings } = await render(post);
+const sections = headings.filter(({ depth }) => depth === 2);
 ---
 
 <BaseLayout title={post.data.title} description={post.data.description} type="article" header={false}>
@@ -32,6 +33,17 @@ const { Content } = await render(post);
       </p>
       <p class="post-author-tagline">{AUTHOR_TAGLINE}</p>
     </header>
+
+    {sections.length >= 3 && (
+      <nav class="post-toc" aria-label="目录">
+        <p class="post-toc-title">目录</p>
+        <ul>
+          {sections.map(({ slug, text }) => (
+            <li><a href={`#${encodeURIComponent(slug)}`}>{text}</a></li>
+          ))}
+        </ul>
+      </nav>
+    )}
 
     <div class="prose">
       <Content />
