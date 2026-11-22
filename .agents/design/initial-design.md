@@ -116,6 +116,7 @@ GitHub Pages
 │   ├── content.config.ts          文章集合与 frontmatter schema
 │   ├── lib/site.ts                base path、文章路径、日期格式化
 │   ├── content/posts/             文章 Markdown
+│   │   └── _images/<slug>/        文章正文图片
 │   ├── layouts/BaseLayout.astro   全站 HTML 壳、meta、页头页脚
 │   ├── pages/
 │   │   ├── index.astro            文章列表
@@ -162,7 +163,7 @@ GitHub Pages
 
 ### 7.4 Markdown 能力
 
-初版依赖 Astro 内置 Markdown 渲染，支持标题、列表、引用、代码块、表格、链接等标准语法。文内图片暂不纳入：项目站点位于子路径，硬编码 `/images/...` 会丢失 base path；后续通过 Astro 资源管线或统一 URL 处理再启用（见 §14）。
+初版依赖 Astro 内置 Markdown 渲染，支持标题、列表、引用、代码块、表格、链接等标准语法。正文图片使用直接内联的 Markdown 图片语法，资源放在 `src/content/posts/_images/<slug>/`，文章通过相对路径引用，例如 `![架构示意图](./_images/my-first-post/diagram.png)`。Astro 在构建时解析本地资源，生成带站点 base path 的 URL，并写入图片的替代文字、原始宽高、懒加载与异步解码属性。正文 CSS 让图片按内容宽度缩放。
 
 ## 8. 页面与路由
 
@@ -347,7 +348,7 @@ workflow 使用 `SITE=https://<owner>.github.io` 与 `BASE_PATH=/<repo>` 构建�
 | 主题 | 浅色、深色、系统偏好分别检查 |
 | 视觉回归 | UI 改动附前后对比截图（基线、视口、主题写明） |
 
-初版没有单元测试：站点逻辑极少，构建成功 + 人工走查是当前足够的质量门槛。引入非平凡逻辑（如分页、标签、图片管线）时再补测试。
+初版没有单元测试：站点逻辑极少，构建成功 + 人工走查是当前足够的质量门槛。引入非平凡逻辑（如分页、标签或自定义图片管线）时再补测试。
 
 ## 13. SEO 与 RSS
 
@@ -362,7 +363,7 @@ workflow 使用 `SITE=https://<owner>.github.io` 与 `BASE_PATH=/<repo>` 构建�
 
 按优先级排列，每项在实施前评估是否值得增加复杂度：
 
-1. **文内图片**：引入 `src/assets` + Astro 资源组件或 MDX，确保子路径部署下 URL 正确；同时考虑图片压缩与懒加载。
+1. **图片处理增强**：在现有本地图片支持上评估构建期压缩与更精细的响应式资源策略。
 2. **标签页**：`tags` 已预留；增加 `/tags/<tag>/` 与标签索引。
 3. **关于页**：维护者提供内容后新增，保持同一排版体系。
 4. **自定义域名**：启用后调整 workflow / 构建命令中的 `SITE`/`BASE_PATH`，补充 CNAME 与 HTTPS 检查。
@@ -378,7 +379,7 @@ workflow 使用 `SITE=https://<owner>.github.io` 与 `BASE_PATH=/<repo>` 构建�
 | 私有仓库能否使用 Pages | 无法上线 | 维护者确认计划并启用 Pages；必要时调整仓库可见性 |
 | 视觉方向未最终确认 | 可能返工 | 先以克制的排版方案落地，按反馈调整 |
 | 项目子路径与自定义域名 | 链接错误 | 统一走 `url()`，构建时注入 `SITE`/`BASE_PATH`；切换域名需重新构建 |
-| 文内图片暂不支持 | 部分文章受限 | §14 第 1 项，单独任务实现 |
+| 图片处理缺少专门压缩管线 | 大图影响产物体积 | 在扩展路线中评估构建期压缩与响应式资源策略 |
 | 依赖升级 | 安全与兼容 | lockfile 入库；升级时以 `pnpm build` 与页面走查验证 |
 
 ## 16. 本次初始化范围
@@ -389,6 +390,7 @@ workflow 使用 `SITE=https://<owner>.github.io` 与 `BASE_PATH=/<repo>` 构建�
 - 可构建的 Astro 骨架：首页、文章页、RSS、404、示例文章、全站样式与 favicon。
 - `gh-pages` 初始构建产物、README、`.gitignore`、lockfile。
 - 本地 `pnpm build`、base path 构建与产物检查；发布命令、日期/页脚对比度与 RSS 可复现性已按 review 修正。
+- 文章 Markdown 支持仓库内相对图片，构建时适配站点 base path 并输出替代文字、宽高和懒加载属性；正文样式支持窄屏缩放。
 - 自动部署 workflow：推送 `main` 或手动触发时构建并更新 `gh-pages`。
 
 待维护者完成 / 确认：
