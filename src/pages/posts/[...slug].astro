@@ -1,5 +1,6 @@
 ---
 import { render, type CollectionEntry } from 'astro:content';
+import { AUTHOR, AUTHOR_TAGLINE } from '../../consts';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getPosts } from '../../lib/posts';
 import { formatDate, url } from '../../lib/site';
@@ -25,6 +26,11 @@ const { Content } = await render(post);
     <header>
       <h1>{post.data.title}</h1>
       <time datetime={post.data.date.toISOString()}>{formatDate(post.data.date)}</time>
+      <p class="post-byline">
+        <span>作者：{AUTHOR}</span>
+        <a href={url('/')}>返回首页</a>
+      </p>
+      <p class="post-author-tagline">{AUTHOR_TAGLINE}</p>
     </header>
 
     <div class="prose">

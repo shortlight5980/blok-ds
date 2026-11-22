@@ -2,7 +2,7 @@
 
 - 版本：v0.1
 - 日期：2026-11-21
-- 状态：初始骨架已实现，视觉方向与站点命名待维护者确认
+- 状态：初始骨架已实现，视觉方向待维护者确认
 - 相关决策：[ADR 0001](../decisions/0001-static-site-stack.md)
 
 ## 1. 摘要
@@ -177,7 +177,7 @@ GitHub Pages
 
 - 页头：目录页（首页）与 404 显示站点名、站点简介与「文章 / RSS」；文章页不显示站点页头。
 - 首页：文章标题与日期，按日期倒序，条目之间用 1px `--rule` 分隔线隔开。非空 `description` 在标题与日期下方显示为摘要，最多两行，超出截断；缺少摘要时保持原有条目间距。无卡片、无分页（文章量增长后再评估）。
-- 文章页：标题、日期、正文、返回列表；不重复站点页头，直接从标题开始。
+- 文章页在正文前显示标题、日期、作者署名、「返回首页」链接和一句话定位。正文末尾保留返回列表入口。
 - 页脚：版权年份 + RSS。
 - 初版不设「关于」页；需要时按维护者提供的内容新增。
 
@@ -351,6 +351,7 @@ workflow 使用 `SITE=https://<owner>.github.io` 与 `BASE_PATH=/<repo>` 构建�
 
 ## 13. SEO 与 RSS
 
+- 站点名称、`og:site_name` 和 RSS 标题统一使用作者的公开展示名。
 - 每页输出 `<title>`、`description`、`og:*`、`twitter:card`；404 输出 `noindex`，不输出 canonical 与 `og:url`（仍保留 `og:type` / `og:title` / `og:description` / `og:site_name`）。
 - `html lang="zh-CN"`。
 - RSS 输出全部已发布文章，包含标题、链接、日期、可选描述；`<language>zh-CN</language>`。
@@ -375,7 +376,6 @@ workflow 使用 `SITE=https://<owner>.github.io` 与 `BASE_PATH=/<repo>` 构建�
 | 风险 / 待定项 | 影响 | 处理 |
 | --- | --- | --- |
 | 私有仓库能否使用 Pages | 无法上线 | 维护者确认计划并启用 Pages；必要时调整仓库可见性 |
-| 站点名称与简介是占位 | 展示不准确 | 维护者确认后在 `src/consts.ts` 修改 |
 | 视觉方向未最终确认 | 可能返工 | 先以克制的排版方案落地，按反馈调整 |
 | 项目子路径与自定义域名 | 链接错误 | 统一走 `url()`，构建时注入 `SITE`/`BASE_PATH`；切换域名需重新构建 |
 | 文内图片暂不支持 | 部分文章受限 | §14 第 1 项，单独任务实现 |
@@ -395,5 +395,5 @@ workflow 使用 `SITE=https://<owner>.github.io` 与 `BASE_PATH=/<repo>` 构建�
 
 - 在仓库设置中启用 GitHub Pages（Deploy from a branch → `gh-pages` / root）。
 - 确认自动部署 workflow：推送 `main` 后会自动构建并更新 `gh-pages`，不需要把 Pages Source 切换为 GitHub Actions。
-- 确认站点名称、简介与视觉方向；必要时调整 `src/consts.ts` 与 `global.css`。
+- 确认视觉方向，必要时调整 `global.css`。
 - 决定是否使用自定义域名、评论、统计等外部能力。
