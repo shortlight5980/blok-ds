@@ -362,6 +362,7 @@ workflow 使用 `SITE=https://<owner>.github.io` 与 `BASE_PATH=/<repo>` 构建�
 
 - 站点名称、`og:site_name` 和 RSS 标题统一使用作者的公开展示名。
 - 每页输出 `<title>`、`description`、`og:*`、`twitter:card`；404 输出 `noindex`，不输出 canonical 与 `og:url`（仍保留 `og:type` / `og:title` / `og:description` / `og:site_name`）。
+- 首页和文章页共用 `public/og-image.png`（1200 × 630）。`og:image` 使用 `SITE` 和部署子路径生成绝对 URL。
 - `html lang="zh-CN"`。
 - RSS 输出全部已发布文章，包含标题、链接、日期、可选描述；`<language>zh-CN</language>`。
 - Sitemap 输出首页和全部已发布文章，链接使用 `SITE` 与 `BASE_PATH` 生成正式绝对地址；文章为空时仍输出有效 XML。
@@ -376,7 +377,7 @@ workflow 使用 `SITE=https://<owner>.github.io` 与 `BASE_PATH=/<repo>` 构建�
 2. **标签页**：`tags` 已预留；增加 `/tags/<tag>/` 与标签索引。
 3. **关于页**：维护者提供内容后新增，保持同一排版体系。
 4. **自定义域名**：启用后调整 workflow / 构建命令中的 `SITE`/`BASE_PATH`，补充 CNAME 与 HTTPS 检查。
-5. **OG 图片**：提升分享与索引质量。
+5. **文章专属分享图**：按需为文章提供独立的分享图。
 6. **评论**：只考虑无账号、低脚本的方案，并明确隐私与维护成本；默认不做。
 7. **搜索**：文章量明显增长后再考虑静态索引，不提前引入。
 8. **分页**：列表超过一屏很多时再评估。
