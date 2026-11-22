@@ -201,6 +201,32 @@ main {
   font-size: 0.8rem;
 }
 
+.post-byline,
+.post-author-details {
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.post-byline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 1rem;
+  margin: 0.65rem 0 0;
+}
+
+.post-byline a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.post-author-details {
+  margin: 0.25rem 0 0;
+}
+
 .prose > :first-child {
   margin-top: 0;
 }
