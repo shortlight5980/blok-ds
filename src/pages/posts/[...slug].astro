@@ -34,3 +34,49 @@ const { Content } = await render(post);
     <p class="post-back"><a href={url('/')}>← 返回文章列表</a></p>
   </article>
 </BaseLayout>
+
+<script>
+  for (const code of document.querySelectorAll('.prose pre > code')) {
+    const pre = code.parentElement!;
+    const source = pre.parentElement?.dataset.codeSource;
+    let tools = pre.previousElementSibling;
+
+    // 手写 HTML 的代码块直接从 <code> 读取，Markdown 块已有工具栏。
+    if (!tools?.classList.contains('code-block-tools')) {
+      const block = document.createElement('div');
+      block.className = 'code-block';
+      tools = document.createElement('div');
+      tools.className = 'code-block-tools';
+      const languageClass = [...code.classList].find((name) => name.startsWith('language-'));
+      const language = languageClass?.slice('language-'.length) || pre.dataset.language;
+      if (language) {
+        const label = document.createElement('span');
+        label.className = 'code-block-language';
+        label.textContent = language;
+        tools.append(label);
+      }
+      pre.before(block);
+      block.append(tools, pre);
+    }
+
+    const status = document.createElement('span');
+    status.className = 'code-block-status';
+    status.setAttribute('role', 'status');
+
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'code-block-copy';
+    button.textContent = '复制代码';
+    button.addEventListener('click', async () => {
+      status.textContent = '';
+      try {
+        const text = source === undefined ? code.textContent ?? '' : JSON.parse(source);
+        await navigator.clipboard.writeText(text);
+        status.textContent = '已复制';
+      } catch {
+        status.textContent = '复制失败，请手动复制';
+      }
+    });
+    tools.append(status, button);
+  }
+</script>

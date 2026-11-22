@@ -222,6 +222,7 @@ main {
 .prose ul,
 .prose ol,
 .prose blockquote,
+.prose :where(.code-block),
 .prose pre,
 .prose table {
   margin: 1.3em 0;
@@ -279,6 +280,50 @@ main {
   background: var(--code-bg);
   font-size: 0.875rem;
   line-height: 1.75;
+}
+
+.code-block {
+  border-radius: 6px;
+  background: var(--code-bg);
+}
+
+.prose .code-block > pre {
+  margin: 0;
+}
+
+.code-block-tools:not(:empty) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 1.1rem;
+  border-bottom: 1px solid var(--rule);
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+
+.code-block-language {
+  font-family: var(--mono);
+  overflow-wrap: anywhere;
+}
+
+.code-block-status {
+  margin-inline-start: auto;
+}
+
+.code-block-copy {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--muted);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+  cursor: pointer;
+}
+
+.code-block-copy:hover {
+  color: var(--accent);
 }
 
 .prose pre.astro-code {
