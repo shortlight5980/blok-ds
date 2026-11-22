@@ -149,7 +149,8 @@ GitHub Pages
 | 字段 | 类型 | 必填 | 默认 | 说明 |
 | --- | --- | --- | --- | --- |
 | `title` | string | 是 | — | 文章标题 |
-| `date` | date (`YYYY-MM-DD`) | 是 | — | 发布/展示日期 |
+| `date` | date (`YYYY-MM-DD`) | 是 | — | 发布日期 |
+| `updatedDate` | string（带引号的 `"YYYY-MM-DD"`） | 否 | — | 作者填写的更新时间，校验后转为日期 |
 | `description` | string | 否 | — | 首页摘要、meta description 与 RSS 摘要 |
 | `tags` | string[] | 否 | `[]` | 预留，初版不展示标签页 |
 | `draft` | boolean | 否 | `false` | `true` 时生产构建不输出 |
@@ -186,7 +187,7 @@ Markdown 代码块在构建时显示作者标注的语言，省略未标注块�
 
 - 页头：目录页（首页）与 404 显示站点名、站点简介与「文章 / RSS」；文章页不显示站点页头。
 - 首页：文章标题与日期，按日期倒序，条目之间用 1px `--rule` 分隔线隔开。非空 `description` 在标题与日期下方显示为摘要，最多两行，超出截断；缺少摘要时保持原有条目间距。无卡片、无分页（文章量增长后再评估）。
-- 文章页在正文前显示标题、日期、作者署名、「返回首页」链接和一句话定位。正文至少有三个二级 Markdown 标题时，在作者区与正文之间按原顺序显示目录，链接复用 Markdown 渲染生成的锚点。正文末尾保留返回列表入口。
+- 文章页在正文前显示标题、发布日期、可选的「更新于」及日期、作者署名、「返回首页」链接和一句话定位。正文至少有三个二级 Markdown 标题时，在作者区与正文之间按原顺序显示目录，链接复用 Markdown 渲染生成的锚点。正文末尾保留返回列表入口。
 - 页脚：版权年份 + RSS。
 - 初版不设「关于」页；需要时按维护者提供的内容新增。
 
@@ -363,7 +364,7 @@ workflow 使用 `SITE=https://<owner>.github.io` 与 `BASE_PATH=/<repo>` 构建�
 - 站点名称、`og:site_name` 和 RSS 标题统一使用作者的公开展示名。
 - 每页输出 `<title>`、`description`、`og:*`、`twitter:card`；404 输出 `noindex`，不输出 canonical 与 `og:url`（仍保留 `og:type` / `og:title` / `og:description` / `og:site_name`）。
 - `html lang="zh-CN"`。
-- RSS 输出全部已发布文章，包含标题、链接、日期、可选描述；`<language>zh-CN</language>`。
+- RSS 输出全部已发布文章，包含标题、链接、取自发布日期的 `<pubDate>` 和可选描述；`<language>zh-CN</language>`。
 - Sitemap 输出首页和全部已发布文章，链接使用 `SITE` 与 `BASE_PATH` 生成正式绝对地址；文章为空时仍输出有效 XML。
 - `robots.txt` 输出项目路径下的爬虫规则与正式 sitemap 地址。标准爬虫从站点域名根路径 `/robots.txt` 获取规则，项目站点构建产物中的 `/<repo>/robots.txt` 只能通过其 URL 直接访问，不参与域名根 robots 规则发现；sitemap 可由域名根文件声明或直接提交给搜索引擎。
 - 默认不引入统计脚本；访问分析如有需要由维护者决定并单独评估隐私影响。

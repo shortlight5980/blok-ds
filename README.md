@@ -25,6 +25,7 @@ pnpm preview          # 预览构建产物
 ---
 title: 标题
 date: 2026-11-21
+updatedDate: "2026-11-22"
 description: 可选，用于首页摘要、meta 描述与 RSS
 tags: []
 ---
@@ -33,6 +34,8 @@ tags: []
 ```
 
 文件名决定文章地址。`my-first-post.md` 对应本地地址 `/posts/my-first-post/`。`draft: true` 的文章只在本地开发时可见。
+
+`updatedDate` 可省略。填写时用引号包住有效的 `YYYY-MM-DD` 日期，文章页会在发布日期旁显示「更新于」。
 
 ### 引用本地图片
 
