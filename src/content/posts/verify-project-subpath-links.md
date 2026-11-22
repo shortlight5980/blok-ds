@@ -2,7 +2,6 @@
 title: "项目子路径下的链接怎么验：从 /blok-ds/ 到文章页"
 date: 2026-11-21
 description: "用 blok-ds 的 BASE_PATH 和站内路径工具说明项目子路径部署的检查方法，帮助确认首页、文章页、资源和 RSS 都指向同一个根路径。"
-tags: [Astro, 链接检查]
 ---
 
 站点部署到 `https://shortlight5980.github.io/blok-ds/` 时，`/` 代表域名根路径，`/blok-ds/` 才是博客的根路径。链接检查的重点，是确认页面中的每个站内地址都从后者开始生成。
