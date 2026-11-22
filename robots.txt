@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://shortlight5980.github.io/blok-ds/sitemap.xml
