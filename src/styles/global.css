@@ -297,6 +297,7 @@ main {
   background: var(--code-bg);
   font-family: var(--mono);
   font-size: 0.875em;
+  overflow-wrap: anywhere;
 }
 
 .prose pre {
