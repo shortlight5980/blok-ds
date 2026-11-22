@@ -27,7 +27,6 @@ title: 标题
 date: 2026-11-21
 updatedDate: "2026-11-22"
 description: 可选，用于首页摘要、meta 描述与 RSS
-tags: []
 ---
 
 正文。

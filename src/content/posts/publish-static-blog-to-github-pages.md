@@ -2,7 +2,6 @@
 title: "静态博客发布到 GitHub Pages：从构建到上线"
 date: 2026-11-22
 description: "以 blok-ds 的 Astro 与 GitHub Actions 配置为例，梳理构建、项目子路径和 gh-pages 发布之间的关系，并给出一套可重复的检查步骤。"
-tags: [GitHub Pages, Astro]
 ---
 
 静态博客的发布过程可以拆成三个动作：把 Markdown 构建成静态文件，把站点放到正确的项目子路径，再把产物交给 GitHub Pages。拆开之后，每一步都有明确的输入和检查结果。

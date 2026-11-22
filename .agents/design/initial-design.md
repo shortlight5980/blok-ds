@@ -152,7 +152,6 @@ GitHub Pages
 | `date` | date (`YYYY-MM-DD`) | 是 | — | 发布日期 |
 | `updatedDate` | string（带引号的 `"YYYY-MM-DD"`） | 否 | — | 作者填写的更新时间，校验后转为日期 |
 | `description` | string | 否 | — | 首页摘要、meta description 与 RSS 摘要 |
-| `tags` | string[] | 否 | `[]` | 预留，初版不展示标签页 |
 | `draft` | boolean | 否 | `false` | `true` 时生产构建不输出 |
 
 ### 7.2 标识与 URL
@@ -375,7 +374,7 @@ workflow 使用 `SITE=https://<owner>.github.io` 与 `BASE_PATH=/<repo>` 构建�
 按优先级排列，每项在实施前评估是否值得增加复杂度：
 
 1. **图片处理增强**：在现有本地图片支持上评估构建期压缩与更精细的响应式资源策略。
-2. **标签页**：`tags` 已预留；增加 `/tags/<tag>/` 与标签索引。
+2. **标签页**：有明确需求时再评估标签字段、索引与路由。
 3. **关于页**：维护者提供内容后新增，保持同一排版体系。
 4. **自定义域名**：启用后调整 workflow / 构建命令中的 `SITE`/`BASE_PATH`，补充 CNAME 与 HTTPS 检查。
 5. **文章专属分享图**：按需为文章提供独立的分享图。
