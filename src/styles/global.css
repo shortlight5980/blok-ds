@@ -437,6 +437,41 @@ main {
   text-align: left;
 }
 
+.post-neighbors {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+  margin-top: 4rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--rule);
+}
+
+.post-neighbor {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  transition: color 0.15s ease;
+}
+
+.post-neighbor--next {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.post-neighbor-label {
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.post-neighbor-title {
+  overflow-wrap: anywhere;
+  font-family: var(--serif);
+  line-height: 1.5;
+}
+
 .post-back {
   margin-top: 4rem;
   font-size: 0.85rem;
