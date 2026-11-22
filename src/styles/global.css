@@ -314,10 +314,9 @@ main {
 
 .code-block-copy {
   padding: 0.25rem 0.5rem;
-  border: 1px solid var(--muted);
-  border-radius: 4px;
-  background: var(--bg);
-  color: var(--fg);
+  border: 0;
+  background: transparent;
+  color: inherit;
   font: inherit;
   cursor: pointer;
 }
