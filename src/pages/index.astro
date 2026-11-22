@@ -11,12 +11,16 @@ const posts = await getPosts();
     <p class="empty">还没有文章。</p>
   ) : (
     <ul class="post-list" aria-label="文章列表">
-      {posts.map((post) => (
-        <li>
-          <a href={postPath(post.id)}>{post.data.title}</a>
-          <time datetime={post.data.date.toISOString()}>{formatDate(post.data.date)}</time>
-        </li>
-      ))}
+      {posts.map((post) => {
+        const summary = post.data.description?.trim();
+        return (
+          <li>
+            <a href={postPath(post.id)}>{post.data.title}</a>
+            <time datetime={post.data.date.toISOString()}>{formatDate(post.data.date)}</time>
+            {summary && <p class="post-list-summary">{summary}</p>}
+          </li>
+        );
+      })}
     </ul>
   )}
 </BaseLayout>

@@ -25,7 +25,7 @@ pnpm preview          # 预览构建产物
 ---
 title: 标题
 date: 2026-11-21
-description: 可选，用于 meta 描述与 RSS
+description: 可选，用于首页摘要、meta 描述与 RSS
 tags: []
 ---
 
