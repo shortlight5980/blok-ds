@@ -16,10 +16,12 @@ const posts = await getPosts();
         const summary = post.data.description?.trim();
         const { listImage } = post.data;
         return (
-          <li>
-            <a href={postPath(post.id)}>{post.data.title}</a>
-            <time datetime={post.data.date.toISOString()}>{formatDate(post.data.date)}</time>
-            {summary && <p class="post-list-summary">{summary}</p>}
+          <li class:list={{ 'post-list-with-image': listImage }}>
+            <div class="post-list-text">
+              <a href={postPath(post.id)}>{post.data.title}</a>
+              <time datetime={post.data.date.toISOString()}>{formatDate(post.data.date)}</time>
+              {summary && <p class="post-list-summary">{summary}</p>}
+            </div>
             {listImage && (
               <Image
                 class="post-list-image"
