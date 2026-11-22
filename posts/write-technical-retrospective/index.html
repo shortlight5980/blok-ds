@@ -1,0 +1,60 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>一篇技术复盘怎么整理：从事实到下一步 · JunweiLi</title><meta name="description" content="给技术复盘一个可复用的结构，用 blok-ds 的子路径构建作为示例，记录事实、判断、行动和验证结果。"><meta name="author" content="JunweiLi"><link rel="canonical" href="https://shortlight5980.github.io/blok-ds/posts/write-technical-retrospective/"><link rel="icon" href="/blok-ds/favicon.svg" type="image/svg+xml"><link rel="alternate" type="application/rss+xml" title="JunweiLi" href="https://shortlight5980.github.io/blok-ds/rss.xml"><meta property="og:type" content="article"><meta property="og:title" content="一篇技术复盘怎么整理：从事实到下一步 · JunweiLi"><meta property="og:description" content="给技术复盘一个可复用的结构，用 blok-ds 的子路径构建作为示例，记录事实、判断、行动和验证结果。"><meta property="og:url" content="https://shortlight5980.github.io/blok-ds/posts/write-technical-retrospective/"><meta property="og:site_name" content="JunweiLi"><meta name="twitter:card" content="summary"><meta name="generator" content="Astro v7.4.13"><link rel="stylesheet" href="/blok-ds/_astro/BaseLayout.CqaDsmRl.css"></head><body><div class="site site--no-header"><main><article class="post"><header><h1>一篇技术复盘怎么整理：从事实到下一步</h1><time datetime="2026-11-20T00:00:00.000Z">2026.11.20</time><p class="post-byline"><span>作者：JunweiLi</span><a href="/blok-ds/">返回首页</a></p><p class="post-author-tagline">全栈开发</p></header><div class="prose"><p>技术复盘需要让读者知道发生了什么、为什么这样判断，以及下一次如何确认结果。把事实、判断、行动和验证分开写，文章就能从过程记录变成可复用的方法。</p>
+<h2 id="先写可核对的事实">先写可核对的事实</h2>
+<p>事实应当能回到仓库、命令或构建产物。以 <code>blok-ds</code> 为例，当前仓库可以直接确认这些内容：</p>
+<ul>
+<li>文章文件位于 <code>src/content/posts/</code>，由 Astro Content Collections 读取。</li>
+<li><code>astro.config.mjs</code> 从 <code>BASE_PATH</code> 生成项目站点的 base。</li>
+<li><code>.github/workflows/main.yml</code> 使用 <code>SITE</code> 和 <code>BASE_PATH</code> 执行 <code>pnpm build</code>。</li>
+<li><code>src/lib/site.ts</code> 集中生成首页、文章页和 RSS 使用的站内路径。</li>
+</ul>
+<p>这些句子描述的是已有文件和配置。它们可以作为复盘的证据，也能帮助读者在自己的仓库中找到对应位置。</p>
+<h2 id="再记录判断和行动">再记录判断和行动</h2>
+<p>事实说明现状，判断说明影响，行动说明准备改变什么。下面是一段明确标注为示例的记录：</p>
+<blockquote>
+<p>示例判断：项目站点的链接如果绕过 <code>src/lib/site.ts</code>，部署到 <code>/blok-ds/</code> 后可能缺少项目路径。</p>
+<p>示例行动：让新增的站内链接使用 <code>url()</code> 或 <code>postPath()</code>，并用带 <code>BASE_PATH=/blok-ds</code> 的构建检查产物。</p>
+</blockquote>
+<p>这种写法把可验证的依据和作者的推断分开。读者可以先复现事实，再判断行动是否适合自己的项目。</p>
+<h2 id="用模板固定输出">用模板固定输出</h2>
+<p>复盘不需要每次重新设计格式。下面的模板可以直接复制，并根据实际项目替换内容：</p>
+<div class="code-block" data-code-source="&quot;# <复盘标题>\n\n## 背景\n- 现象：\n- 影响：\n- 范围：\n\n## 事实\n- 文件、命令或日志证据：\n- 可以复现的输入：\n\n## 判断\n- 观察到的原因：\n- 仍然不确定的部分：\n\n## 行动\n- 做了什么：\n- 为什么这样做：\n\n## 验证\n- 执行的命令：\n- 预期结果：\n- 实际结果：\n\n## 下一步\n- 保留什么：\n- 何时重新检查：&quot;"><div class="code-block-tools"><span class="code-block-language">markdown</span></div><pre class="astro-code astro-code-themes github-light-high-contrast github-dark-high-contrast" style="background-color:#ffffff;--shiki-dark-bg:#0a0c10;color:#0e1116;--shiki-dark:#f0f3f6; overflow-x: auto;" tabindex="0" data-language="markdown"><code><span class="line"><span style="color:#023B95;--shiki-light-font-weight:bold;--shiki-dark:#91CBFF;--shiki-dark-font-weight:bold"># &lt;复盘标题&gt;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#023B95;--shiki-light-font-weight:bold;--shiki-dark:#91CBFF;--shiki-dark-font-weight:bold">## 背景</span></span>
+<span class="line"><span style="color:#702C00;--shiki-dark:#FFB757">-</span><span style="color:#0E1116;--shiki-dark:#F0F3F6"> 现象：</span></span>
+<span class="line"><span style="color:#702C00;--shiki-dark:#FFB757">-</span><span style="color:#0E1116;--shiki-dark:#F0F3F6"> 影响：</span></span>
+<span class="line"><span style="color:#702C00;--shiki-dark:#FFB757">-</span><span style="color:#0E1116;--shiki-dark:#F0F3F6"> 范围：</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#023B95;--shiki-light-font-weight:bold;--shiki-dark:#91CBFF;--shiki-dark-font-weight:bold">## 事实</span></span>
+<span class="line"><span style="color:#702C00;--shiki-dark:#FFB757">-</span><span style="color:#0E1116;--shiki-dark:#F0F3F6"> 文件、命令或日志证据：</span></span>
+<span class="line"><span style="color:#702C00;--shiki-dark:#FFB757">-</span><span style="color:#0E1116;--shiki-dark:#F0F3F6"> 可以复现的输入：</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#023B95;--shiki-light-font-weight:bold;--shiki-dark:#91CBFF;--shiki-dark-font-weight:bold">## 判断</span></span>
+<span class="line"><span style="color:#702C00;--shiki-dark:#FFB757">-</span><span style="color:#0E1116;--shiki-dark:#F0F3F6"> 观察到的原因：</span></span>
+<span class="line"><span style="color:#702C00;--shiki-dark:#FFB757">-</span><span style="color:#0E1116;--shiki-dark:#F0F3F6"> 仍然不确定的部分：</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#023B95;--shiki-light-font-weight:bold;--shiki-dark:#91CBFF;--shiki-dark-font-weight:bold">## 行动</span></span>
+<span class="line"><span style="color:#702C00;--shiki-dark:#FFB757">-</span><span style="color:#0E1116;--shiki-dark:#F0F3F6"> 做了什么：</span></span>
+<span class="line"><span style="color:#702C00;--shiki-dark:#FFB757">-</span><span style="color:#0E1116;--shiki-dark:#F0F3F6"> 为什么这样做：</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#023B95;--shiki-light-font-weight:bold;--shiki-dark:#91CBFF;--shiki-dark-font-weight:bold">## 验证</span></span>
+<span class="line"><span style="color:#702C00;--shiki-dark:#FFB757">-</span><span style="color:#0E1116;--shiki-dark:#F0F3F6"> 执行的命令：</span></span>
+<span class="line"><span style="color:#702C00;--shiki-dark:#FFB757">-</span><span style="color:#0E1116;--shiki-dark:#F0F3F6"> 预期结果：</span></span>
+<span class="line"><span style="color:#702C00;--shiki-dark:#FFB757">-</span><span style="color:#0E1116;--shiki-dark:#F0F3F6"> 实际结果：</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#023B95;--shiki-light-font-weight:bold;--shiki-dark:#91CBFF;--shiki-dark-font-weight:bold">## 下一步</span></span>
+<span class="line"><span style="color:#702C00;--shiki-dark:#FFB757">-</span><span style="color:#0E1116;--shiki-dark:#F0F3F6"> 保留什么：</span></span>
+<span class="line"><span style="color:#702C00;--shiki-dark:#FFB757">-</span><span style="color:#0E1116;--shiki-dark:#F0F3F6"> 何时重新检查：</span></span></code></pre></div>
+<h3 id="让验证结果能重做">让验证结果能重做</h3>
+<p>本仓库的静态站点可以用一组短命令验证构建是否仍然可用：</p>
+<div class="code-block" data-code-source="&quot;set -eu\n\npnpm install --frozen-lockfile\nSITE=https://shortlight5980.github.io BASE_PATH=/blok-ds pnpm build\n\ntest -f dist/index.html\ntest -f dist/rss.xml\ngrep -q &#x27;/blok-ds/&#x27; dist/index.html&quot;"><div class="code-block-tools"><span class="code-block-language">bash</span></div><pre class="astro-code astro-code-themes github-light-high-contrast github-dark-high-contrast" style="background-color:#ffffff;--shiki-dark-bg:#0a0c10;color:#0e1116;--shiki-dark:#f0f3f6; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#023B95;--shiki-dark:#91CBFF">set</span><span style="color:#023B95;--shiki-dark:#91CBFF"> -eu</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#702C00;--shiki-dark:#FFB757">pnpm</span><span style="color:#032563;--shiki-dark:#ADDCFF"> install</span><span style="color:#023B95;--shiki-dark:#91CBFF"> --frozen-lockfile</span></span>
+<span class="line"><span style="color:#0E1116;--shiki-dark:#F0F3F6">SITE</span><span style="color:#A0111F;--shiki-dark:#FF9492">=</span><span style="color:#032563;--shiki-dark:#ADDCFF">https://shortlight5980.github.io</span><span style="color:#0E1116;--shiki-dark:#F0F3F6"> BASE_PATH</span><span style="color:#A0111F;--shiki-dark:#FF9492">=</span><span style="color:#032563;--shiki-dark:#ADDCFF">/blok-ds</span><span style="color:#702C00;--shiki-dark:#FFB757"> pnpm</span><span style="color:#032563;--shiki-dark:#ADDCFF"> build</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#023B95;--shiki-dark:#91CBFF">test</span><span style="color:#023B95;--shiki-dark:#91CBFF"> -f</span><span style="color:#032563;--shiki-dark:#ADDCFF"> dist/index.html</span></span>
+<span class="line"><span style="color:#023B95;--shiki-dark:#91CBFF">test</span><span style="color:#023B95;--shiki-dark:#91CBFF"> -f</span><span style="color:#032563;--shiki-dark:#ADDCFF"> dist/rss.xml</span></span>
+<span class="line"><span style="color:#702C00;--shiki-dark:#FFB757">grep</span><span style="color:#023B95;--shiki-dark:#91CBFF"> -q</span><span style="color:#032563;--shiki-dark:#ADDCFF"> '/blok-ds/'</span><span style="color:#032563;--shiki-dark:#ADDCFF"> dist/index.html</span></span></code></pre></div>
+<p>复盘中记录完整命令和预期结果，其他人就能在相同输入下重做检查。若结果改变，也能定位变化发生在内容、构建参数还是页面路径。</p>
+<h2 id="用结论收束文章">用结论收束文章</h2>
+<p>一篇可读的技术复盘，结论应回答两个问题：这次观察带来了什么可执行的规则，下一次用什么检查确认它仍然成立。对项目子路径部署来说，规则是统一生成站内路径，检查是用 <code>/blok-ds/</code> 构建并核对产物中的链接。这样的结论短小，却足以指导下一次改动。</p>
+</div><p class="post-back"><a href="/blok-ds/">← 返回文章列表</a></p></article></main><footer class="site-footer"><span>© 2026 JunweiLi</span><a href="/blok-ds/rss.xml">RSS</a></footer></div></body></html><script type="module">for(let e of document.querySelectorAll(`.prose pre > code`)){let t=e.parentElement,n=t.parentElement?.dataset.codeSource,r=t.previousElementSibling;if(!r?.classList.contains(`code-block-tools`)){let n=document.createElement(`div`);n.className=`code-block`,r=document.createElement(`div`),r.className=`code-block-tools`;let i=[...e.classList].find(e=>e.startsWith(`language-`))?.slice(9)||t.dataset.language;if(i){let e=document.createElement(`span`);e.className=`code-block-language`,e.textContent=i,r.append(e)}t.before(n),n.append(r,t)}let i=document.createElement(`span`);i.className=`code-block-status`,i.setAttribute(`role`,`status`);let a=document.createElement(`button`);a.type=`button`,a.className=`code-block-copy`,a.textContent=`复制代码`,a.addEventListener(`click`,async()=>{i.textContent=``;try{let t=n===void 0?e.textContent??``:JSON.parse(n);await navigator.clipboard.writeText(t),i.textContent=`已复制`}catch{i.textContent=`复制失败，请手动复制`}}),r.append(i,a)}</script>
