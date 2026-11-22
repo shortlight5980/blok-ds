@@ -34,6 +34,26 @@ tags: []
 
 文件名决定文章地址。`my-first-post.md` 对应本地地址 `/posts/my-first-post/`。`draft: true` 的文章只在本地开发时可见。
 
+### 引用本地图片
+
+需要和文章一起管理图片时，可以把图片放在文章内容目录下：
+
+```text
+src/content/posts/
+├── my-first-post.md
+└── _images/
+    └── my-first-post/
+        └── diagram.png
+```
+
+在文章中使用图片文件的相对路径，并直接写出图片语法：
+
+```markdown
+![架构示意图](./_images/my-first-post/diagram.png)
+```
+
+文章地址仍由 `my-first-post.md` 对应为 `/posts/my-first-post/`。构建时 Astro 会处理本地图片资源，自动生成适配 `BASE_PATH` 的 URL，并在图片元素上写入替代文字与原始宽高属性。宽高属性会在图片加载前保留等比例空间，正文样式会让图片随内容宽度缩放。
+
 ## 部署
 
 这是一个公开仓库，站点已通过 GitHub Pages 上线。访问地址为 [https://shortlight5980.github.io/blok-ds/](https://shortlight5980.github.io/blok-ds/)。
