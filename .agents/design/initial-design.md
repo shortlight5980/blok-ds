@@ -361,7 +361,7 @@ workflow 使用 `SITE=https://<owner>.github.io` 与 `BASE_PATH=/<repo>` 构建�
 - `html lang="zh-CN"`。
 - RSS 输出全部已发布文章，包含标题、链接、日期、可选描述；`<language>zh-CN</language>`。
 - Sitemap 输出首页和全部已发布文章，链接使用 `SITE` 与 `BASE_PATH` 生成正式绝对地址；文章为空时仍输出有效 XML。
-- `robots.txt` 输出项目路径下的爬虫规则与正式 sitemap 地址。标准爬虫读取域名根路径 `/robots.txt`，项目站点构建产物的生效范围是 `/<repo>/`。
+- `robots.txt` 输出项目路径下的爬虫规则与正式 sitemap 地址。标准爬虫从站点域名根路径 `/robots.txt` 获取规则，项目站点构建产物中的 `/<repo>/robots.txt` 只能通过其 URL 直接访问，不参与域名根 robots 规则发现；sitemap 可由域名根文件声明或直接提交给搜索引擎。
 - 默认不引入统计脚本；访问分析如有需要由维护者决定并单独评估隐私影响。
 
 ## 14. 扩展路线
