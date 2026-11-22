@@ -1,6 +1,6 @@
 ---
 import { render, type CollectionEntry } from 'astro:content';
-import { AUTHOR, AUTHOR_JOB_DIRECTION, AUTHOR_TAGLINE } from '../../consts';
+import { AUTHOR, AUTHOR_TAGLINE } from '../../consts';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getPosts } from '../../lib/posts';
 import { formatDate, url } from '../../lib/site';
@@ -19,9 +19,6 @@ interface Props {
 
 const { post } = Astro.props;
 const { Content } = await render(post);
-const authorDetails = [AUTHOR_TAGLINE, AUTHOR_JOB_DIRECTION && `求职方向：${AUTHOR_JOB_DIRECTION}`]
-  .filter(Boolean)
-  .join(' · ');
 ---
 
 <BaseLayout title={post.data.title} description={post.data.description} type="article" header={false}>
@@ -33,7 +30,7 @@ const authorDetails = [AUTHOR_TAGLINE, AUTHOR_JOB_DIRECTION && `求职方向：$
         <span>作者：{AUTHOR}</span>
         <a href={url('/')}>返回首页</a>
       </p>
-      {authorDetails && <p class="post-author-details">{authorDetails}</p>}
+      <p class="post-author-tagline">{AUTHOR_TAGLINE}</p>
     </header>
 
     <div class="prose">

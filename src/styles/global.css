@@ -202,7 +202,7 @@ main {
 }
 
 .post-byline,
-.post-author-details {
+.post-author-tagline {
   color: var(--muted);
   font-size: 0.9rem;
   line-height: 1.6;
@@ -223,7 +223,7 @@ main {
   text-underline-offset: 0.2em;
 }
 
-.post-author-details {
+.post-author-tagline {
   margin: 0.25rem 0 0;
 }
 
