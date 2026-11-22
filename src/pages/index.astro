@@ -1,4 +1,5 @@
 ---
+import { Image } from 'astro:assets';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { getPosts } from '../lib/posts';
 import { formatDate, postPath } from '../lib/site';
@@ -13,11 +14,21 @@ const posts = await getPosts();
     <ul class="post-list" aria-label="文章列表">
       {posts.map((post) => {
         const summary = post.data.description?.trim();
+        const { listImage } = post.data;
         return (
           <li>
             <a href={postPath(post.id)}>{post.data.title}</a>
             <time datetime={post.data.date.toISOString()}>{formatDate(post.data.date)}</time>
             {summary && <p class="post-list-summary">{summary}</p>}
+            {listImage && (
+              <Image
+                class="post-list-image"
+                src={listImage.src}
+                alt={listImage.alt}
+                loading="lazy"
+                decoding="async"
+              />
+            )}
           </li>
         );
       })}

@@ -118,7 +118,7 @@ GitHub Pages
 │   ├── content.config.ts          文章集合与 frontmatter schema
 │   ├── lib/site.ts                base path、文章路径、日期格式化
 │   ├── content/posts/             文章 Markdown
-│   │   └── _images/<slug>/        文章正文图片
+│   │   └── _images/<slug>/        文章正文与列表图片
 │   ├── layouts/BaseLayout.astro   全站 HTML 壳、meta、页头页脚
 │   ├── pages/
 │   │   ├── index.astro            文章列表
@@ -152,6 +152,7 @@ GitHub Pages
 | `date` | date (`YYYY-MM-DD`) | 是 | — | 发布日期 |
 | `updatedDate` | string（带引号的 `"YYYY-MM-DD"`） | 否 | — | 作者填写的更新时间，校验后转为日期 |
 | `description` | string | 否 | — | 首页摘要、meta description 与 RSS 摘要 |
+| `listImage` | `{ src, alt }` | 否 | — | 首页配图。`src` 为相对于文章的本地图片路径，`alt` 为替代文字 |
 | `draft` | boolean | 否 | `false` | `true` 时生产构建不输出 |
 
 ### 7.2 标识与 URL
@@ -175,7 +176,7 @@ Markdown 代码块在构建时显示作者标注的语言，省略未标注块�
 
 | 路由 | 内容 | 生成方式 |
 | --- | --- | --- |
-| `/` | 文章列表（标题、日期、可选摘要，按日期倒序） | `index.astro` |
+| `/` | 文章列表（标题、日期、可选摘要和配图，按日期倒序） | `index.astro` |
 | `/posts/<slug>/` | 文章正文 | `getStaticPaths` 预渲染 |
 | `/rss.xml` | RSS 2.0 | 构建时生成 |
 | `/sitemap.xml` | XML 站点地图（首页与已发布文章） | 构建时生成 |
@@ -185,7 +186,7 @@ Markdown 代码块在构建时显示作者标注的语言，省略未标注块�
 视觉结构：
 
 - 页头：目录页（首页）与 404 显示站点名、站点简介与「文章 / RSS」；文章页不显示站点页头。
-- 首页：文章标题与日期，按日期倒序，条目之间用 1px `--rule` 分隔线隔开。非空 `description` 在标题与日期下方显示为摘要，最多两行，超出截断；缺少摘要时保持原有条目间距。无卡片、无分页（文章量增长后再评估）。
+- 首页：文章标题与日期，按日期倒序，条目之间用 1px `--rule` 分隔线隔开。非空 `description` 在标题与日期下方显示为摘要，最多两行，超出截断；缺少摘要时保持原有条目间距。设置 `listImage` 的条目在文字下方等比显示一张图片，Astro 在构建时生成适配 base path 的 URL 与宽高属性。无卡片、无分页（文章量增长后再评估）。
 - 文章页在正文前显示标题、发布日期、可选的「更新于」及日期、作者署名、「返回首页」链接和一句话定位。正文至少有三个二级 Markdown 标题时，在作者区与正文之间按原顺序显示目录，链接复用 Markdown 渲染生成的锚点。正文末尾按首页倒序文章列表显示可用的上一篇和下一篇链接，并保留返回列表入口。
 - 页脚：版权年份 + RSS。
 - 初版不设「关于」页；需要时按维护者提供的内容新增。

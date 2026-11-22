@@ -191,6 +191,16 @@ main {
   line-height: 1.6;
 }
 
+.post-list-image {
+  grid-column: 1 / -1;
+  justify-self: start;
+  width: auto;
+  max-width: min(100%, 16rem);
+  height: auto;
+  max-height: 10rem;
+  margin-top: 0.75rem;
+}
+
 .empty {
   color: var(--muted);
 }
