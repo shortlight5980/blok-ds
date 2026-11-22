@@ -59,6 +59,8 @@ astro build
   ├─ 首页：文章列表
   ├─ /posts/<slug>/：文章详情
   ├─ /rss.xml
+   ├─ /sitemap.xml
+   ├─ /robots.txt
   ├─ /404.html
   └─ dist/：静态 HTML、CSS、SVG
   │ 发布到 gh-pages 分支（手动或 Actions）
@@ -122,6 +124,8 @@ GitHub Pages
 │   │   ├── index.astro            文章列表
 │   │   ├── posts/[...slug].astro  文章详情（getStaticPaths）
 │   │   ├── rss.xml.js             RSS 2.0
+│   │   ├── sitemap.xml.ts         XML 站点地图
+│   │   ├── robots.txt.ts          爬虫规则与 sitemap 地址
 │   │   └── 404.astro              404 页面
 │   └── styles/global.css          设计变量、布局、正文排版
 ├── .github/assets/                PR 视觉证据截图
@@ -174,6 +178,8 @@ Markdown 代码块在构建时显示作者标注的语言，省略未标注块�
 | `/` | 文章列表（标题、日期、可选摘要，按日期倒序） | `index.astro` |
 | `/posts/<slug>/` | 文章正文 | `getStaticPaths` 预渲染 |
 | `/rss.xml` | RSS 2.0 | 构建时生成 |
+| `/sitemap.xml` | XML 站点地图（首页与已发布文章） | 构建时生成 |
+| `/robots.txt` | 爬虫规则与站点地图地址 | 构建时生成 |
 | `/404.html` | 404 | 静态页 |
 
 视觉结构：
@@ -264,7 +270,7 @@ pnpm preview   # 预览 dist/
 站点产物发布到独立的 `gh-pages` 分支；启用 Pages 后由 GitHub Pages 直接托管，不需要服务器：
 
 - 源分支保持 `main` 干净，`dist/` 不进入 `main`。
-- `gh-pages` 分支只包含构建产物（HTML、`_astro/` 资源、`rss.xml`、`favicon.svg`、`.nojekyll`）。
+- `gh-pages` 分支只包含构建产物（HTML、`_astro/` 资源、`rss.xml`、`sitemap.xml`、`robots.txt`、`favicon.svg`、`.nojekyll`）。
 - `public/.nojekyll` 随构建复制到产物根目录，阻止 Pages 的 Jekyll 处理，确保 `_astro/` 不被忽略。
 - 发布流程（手动）：`SITE=https://shortlight5980.github.io BASE_PATH=/blok-ds pnpm build` → 用 `rsync -a --delete --exclude=.git dist/ <worktree>/` 更新 `gh-pages` 分支 → push。`--exclude=.git` 用于保留 worktree 的 `.git` 文件。自动部署见 §11.3。
 
@@ -358,8 +364,9 @@ workflow 使用 `SITE=https://<owner>.github.io` 与 `BASE_PATH=/<repo>` 构建�
 - 每页输出 `<title>`、`description`、`og:*`、`twitter:card`；404 输出 `noindex`，不输出 canonical 与 `og:url`（仍保留 `og:type` / `og:title` / `og:description` / `og:site_name`）。
 - `html lang="zh-CN"`。
 - RSS 输出全部已发布文章，包含标题、链接、日期、可选描述；`<language>zh-CN</language>`。
+- Sitemap 输出首页和全部已发布文章，链接使用 `SITE` 与 `BASE_PATH` 生成正式绝对地址；文章为空时仍输出有效 XML。
+- `robots.txt` 输出项目路径下的爬虫规则与正式 sitemap 地址。标准爬虫从站点域名根路径 `/robots.txt` 获取规则，项目站点构建产物中的 `/<repo>/robots.txt` 只能通过其 URL 直接访问，不参与域名根 robots 规则发现；sitemap 可由域名根文件声明或直接提交给搜索引擎。
 - 默认不引入统计脚本；访问分析如有需要由维护者决定并单独评估隐私影响。
-- sitemap、OG 图片生成列为后续项。
 
 ## 14. 扩展路线
 
@@ -369,7 +376,7 @@ workflow 使用 `SITE=https://<owner>.github.io` 与 `BASE_PATH=/<repo>` 构建�
 2. **标签页**：`tags` 已预留；增加 `/tags/<tag>/` 与标签索引。
 3. **关于页**：维护者提供内容后新增，保持同一排版体系。
 4. **自定义域名**：启用后调整 workflow / 构建命令中的 `SITE`/`BASE_PATH`，补充 CNAME 与 HTTPS 检查。
-5. **sitemap / OG 图片**：提升分享与索引质量。
+5. **OG 图片**：提升分享与索引质量。
 6. **评论**：只考虑无账号、低脚本的方案，并明确隐私与维护成本；默认不做。
 7. **搜索**：文章量明显增长后再考虑静态索引，不提前引入。
 8. **分页**：列表超过一屏很多时再评估。
@@ -389,7 +396,7 @@ workflow 使用 `SITE=https://<owner>.github.io` 与 `BASE_PATH=/<repo>` 构建�
 已完成：
 
 - 仓库文档体系：`AGENTS.md`、`.agents/`（协作、通信、流程、模板、设计、ADR）。
-- 可构建的 Astro 骨架：首页、文章页、RSS、404、示例文章、全站样式与 favicon。
+- 可构建的 Astro 骨架：首页、文章页、RSS、sitemap、robots.txt、404、示例文章、全站样式与 favicon。
 - `gh-pages` 初始构建产物、README、`.gitignore`、lockfile。
 - 本地 `pnpm build`、base path 构建与产物检查；发布命令、日期/页脚对比度与 RSS 可复现性已按 review 修正。
 - 文章 Markdown 支持仓库内相对图片，构建时适配站点 base path 并输出替代文字、宽高和懒加载属性；正文样式支持窄屏缩放。

@@ -80,6 +80,12 @@ git worktree remove --force /tmp/blok-ds-pages
 
 `public/.nojekyll` 会随构建进入产物，避免 Jekyll 忽略 `_astro/` 资源。
 
+## 搜索引擎发现
+
+生产构建会生成 `sitemap.xml` 与 `robots.txt`。使用项目站点配置构建时，它们的地址分别是 `/blok-ds/sitemap.xml` 与 `/blok-ds/robots.txt`，`robots.txt` 中的 `Sitemap` 指向正式绝对地址。
+
+标准爬虫从站点域名根路径 `/robots.txt` 获取规则，当前站点对应 `https://shortlight5980.github.io/robots.txt`。项目产物中的 `/blok-ds/robots.txt` 只能通过 `https://shortlight5980.github.io/blok-ds/robots.txt` 直接访问，其内容不参与域名根 robots 规则发现。若要通过 robots 发现 sitemap，需要在域名根文件声明 `Sitemap: https://shortlight5980.github.io/blok-ds/sitemap.xml`，也可以直接向搜索引擎提交该 sitemap 地址。
+
 ## 文档
 
 - [AGENTS.md](AGENTS.md)：agent 协作入口
