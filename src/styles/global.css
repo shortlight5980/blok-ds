@@ -214,6 +214,11 @@ main {
   font-size: 0.8rem;
 }
 
+.post header time + time {
+  margin-inline-start: 1rem;
+  white-space: nowrap;
+}
+
 .post-byline,
 .post-author-tagline {
   color: var(--muted);
