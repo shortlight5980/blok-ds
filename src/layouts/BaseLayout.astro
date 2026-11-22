@@ -25,6 +25,7 @@ const {
 const pageTitle = title ? `${title} · ${SITE_TITLE}` : SITE_TITLE;
 const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url);
 const rssUrl = new URL(url('/rss.xml'), Astro.site ?? Astro.url);
+const ogImageUrl = new URL(url('/og-image.png'), Astro.site ?? Astro.url);
 ---
 
 <!doctype html>
@@ -43,6 +44,12 @@ const rssUrl = new URL(url('/rss.xml'), Astro.site ?? Astro.url);
     <meta property="og:description" content={description} />
     {!noindex && <meta property="og:url" content={canonical} />}
     <meta property="og:site_name" content={SITE_TITLE} />
+    {!noindex && (
+      <>
+        <meta property="og:image" content={ogImageUrl} />
+        <meta property="og:image:alt" content={SITE_TITLE} />
+      </>
+    )}
     <meta name="twitter:card" content="summary" />
     <meta name="generator" content={Astro.generator} />
   </head>
