@@ -56,6 +56,18 @@ src/content/posts/
 
 文章地址仍由 `my-first-post.md` 对应为 `/posts/my-first-post/`。构建时 Astro 会处理本地图片资源，自动生成适配 `BASE_PATH` 的 URL，并在图片元素上写入替代文字与原始宽高属性。宽高属性会在图片加载前保留等比例空间，正文样式会让图片随内容宽度缩放。
 
+### 列表配图
+
+在文章的 frontmatter 中按需添加 `listImage`。`src` 填写相对于该 Markdown 文件的本地图片路径，图片可放在同一个 `_images/<slug>/` 目录中。
+
+```yaml
+listImage:
+  src: ./_images/my-first-post/diagram.png
+  alt: 构建流程示意图
+```
+
+有信息的图片用 `alt` 描述要传达的内容，纯装饰图可填写 `alt: ""`。配图在首页对应条目的右侧等比显示。
+
 ## 部署
 
 这是一个公开仓库，站点已通过 GitHub Pages 上线。访问地址为 [https://shortlight5980.github.io/blok-ds/](https://shortlight5980.github.io/blok-ds/)。

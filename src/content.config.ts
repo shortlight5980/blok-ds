@@ -3,7 +3,7 @@ import { glob } from 'astro/loaders';
 
 const posts = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/posts' }),
-  schema: z.object({
+  schema: ({ image }) => z.object({
     title: z.string(),
     date: z.coerce.date(),
     // 未加引号的 YAML 日期会在校验前被转换，无法识别已经进位的日期。
@@ -11,6 +11,10 @@ const posts = defineCollection({
       .transform((date) => new Date(date))
       .optional(),
     description: z.string().optional(),
+    listImage: z.object({
+      src: image(),
+      alt: z.string().trim(),
+    }).optional(),
     draft: z.boolean().default(false),
   }),
 });

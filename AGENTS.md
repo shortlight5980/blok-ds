@@ -41,8 +41,8 @@ public/               静态资源（favicon 等）
 
 ## 内容约定
 
-- 新文章放在 `src/content/posts/`，文件名即 slug，文章地址为 `/posts/<slug>/`；发布后改文件名会破坏旧链接。正文图片放在 `src/content/posts/_images/<slug>/`，通过 Markdown 相对路径引用，并与文章一起提交。
-- frontmatter：`title`、`date` 必填；`updatedDate`、`description`、`draft` 可选。`date` 使用 `YYYY-MM-DD`；`updatedDate` 使用带引号的 `"YYYY-MM-DD"`。
+- 新文章放在 `src/content/posts/`，文件名即 slug，文章地址为 `/posts/<slug>/`；发布后改文件名会破坏旧链接。本地图片放在 `src/content/posts/_images/<slug>/`，通过相对路径引用，并与文章一起提交。
+- frontmatter：`title`、`date` 必填；`updatedDate`、`description`、`listImage`、`draft` 可选。`date` 使用 `YYYY-MM-DD`；`updatedDate` 使用带引号的 `"YYYY-MM-DD"`。列表配图填写 `listImage.src` 和 `listImage.alt`，正文图片使用 Markdown 图片语法。
 - `draft: true` 的文章只在 `pnpm dev` 中出现，生产构建不输出。
 - 正文用简洁的书面中文；少用解释性铺垫。代码块标注语言。
 
