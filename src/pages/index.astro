@@ -481,5 +481,14 @@ const posts = await getPosts();
     desktopQuery.addEventListener('change', handleMediaChange);
     reducedMotionQuery.addEventListener('change', handleMediaChange);
     colorSchemeQuery.addEventListener('change', handleMediaChange);
+
+    const themeObserver = new MutationObserver(() => {
+      readPalette();
+      if (state.desktop && !state.reduced) render();
+    });
+    themeObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme']
+    });
   })();
 </script>

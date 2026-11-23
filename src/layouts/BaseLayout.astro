@@ -1,5 +1,6 @@
 ---
 import { SITE_TITLE, SITE_DESCRIPTION, SITE_LANG, AUTHOR } from '../consts';
+import ThemeToggle from '../components/ThemeToggle.astro';
 import { url } from '../lib/site';
 import '../styles/global.css';
 
@@ -33,6 +34,16 @@ const ogImageUrl = new URL(url('/og-image.png'), Astro.site ?? Astro.url);
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script is:inline>
+      (() => {
+        try {
+          const theme = localStorage.getItem('blok-theme');
+          if (theme === 'light' || theme === 'dark') {
+            document.documentElement.dataset.theme = theme;
+          }
+        } catch {}
+      })();
+    </script>
     <title>{pageTitle}</title>
     <meta name="description" content={description} />
     <meta name="author" content={AUTHOR} />
@@ -56,7 +67,7 @@ const ogImageUrl = new URL(url('/og-image.png'), Astro.site ?? Astro.url);
   <body>
     <slot name="page-background" />
     <div class:list={{ site: true, 'site--no-header': !header, 'site--home': home }}>
-      {header && (
+      {header ? (
         <header class="site-header">
           <div class="site-identity">
             {home ? (
@@ -69,8 +80,13 @@ const ogImageUrl = new URL(url('/og-image.png'), Astro.site ?? Astro.url);
           <nav aria-label="站点导航">
             <a href={url('/')}>文章</a>
             <a href={url('/rss.xml')}>RSS</a>
+            <ThemeToggle />
           </nav>
         </header>
+      ) : (
+        <div class="site-toolbar">
+          <ThemeToggle />
+        </div>
       )}
 
       <main>
@@ -82,5 +98,40 @@ const ogImageUrl = new URL(url('/og-image.png'), Astro.site ?? Astro.url);
         <a href={url('/rss.xml')}>RSS</a>
       </footer>
     </div>
+    <script is:inline>
+      (() => {
+        const root = document.documentElement;
+        const toggle = document.querySelector('[data-theme-toggle]');
+        const label = toggle?.querySelector('[data-theme-toggle-label]');
+        const media = window.matchMedia('(prefers-color-scheme: dark)');
+
+        if (!toggle) return;
+
+        const getTheme = () => root.dataset.theme ?? (media.matches ? 'dark' : 'light');
+
+        const updateToggle = () => {
+          const isDark = getTheme() === 'dark';
+          toggle.setAttribute('aria-label', '夜间模式');
+          toggle.setAttribute('aria-pressed', String(isDark));
+          toggle.setAttribute('title', '夜间模式');
+          if (label) label.textContent = isDark ? '夜间模式' : '浅色模式';
+        };
+
+        toggle.addEventListener('click', () => {
+          const theme = getTheme() === 'dark' ? 'light' : 'dark';
+          root.dataset.theme = theme;
+          try {
+            localStorage.setItem('blok-theme', theme);
+          } catch {}
+          updateToggle();
+        });
+
+        updateToggle();
+        media.addEventListener('change', () => {
+          if (!root.dataset.theme) updateToggle();
+        });
+        toggle.hidden = false;
+      })();
+    </script>
   </body>
 </html>
