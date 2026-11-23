@@ -274,7 +274,7 @@ pnpm preview   # 预览 dist/
 - 源分支保持 `main` 干净，`dist/` 不进入 `main`。
 - `gh-pages` 分支只包含构建产物（HTML、`_astro/` 资源、`rss.xml`、`sitemap.xml`、`robots.txt`、`favicon.svg`、`.nojekyll`）。
 - `public/.nojekyll` 随构建复制到产物根目录，阻止 Pages 的 Jekyll 处理，确保 `_astro/` 不被忽略。
-- 发布流程（手动）：`SITE=https://shortlight5980.github.io BASE_PATH=/blok-ds pnpm build` → 用 `rsync -a --delete --exclude=.git dist/ <worktree>/` 更新 `gh-pages` 分支 → push。`--exclude=.git` 用于保留 worktree 的 `.git` 文件。自动部署见 §11.3。
+- 发布流程（手动）：`SITE=https://shortlight5980.github.io BASE_PATH=/blok-ds pnpm build` → 用 `rsync -a --delete --exclude=.git dist/ <worktree>/` 更新 `gh-pages` worktree → 用 `scripts/check-homepage-css.mjs` 检查首页实际引用的同站 CSS 文件 → commit / push。`--exclude=.git` 用于保留 worktree 的 `.git` 文件。自动部署见 §11.3。
 
 ### 11.2 首次启用（维护者操作）
 
@@ -287,58 +287,16 @@ pnpm preview   # 预览 dist/
 
 推送 `main` 或手动触发时，`.github/workflows/main.yml` 构建站点并把 `dist/` 更新到 `gh-pages` 分支；Pages 继续使用 **Deploy from a branch**（`gh-pages`），不需要切换为 GitHub Actions。
 
-```yaml
-name: Deploy to GitHub Pages
+自动工作流保留 `Deploy from a branch` 的 Pages 来源，并按以下顺序执行：
 
-on:
-  push:
-    branches: [main]
-  workflow_dispatch:
+1. 用 `contents: write` 与 `pages: read` 权限安装依赖并构建项目。
+2. fetch `gh-pages`，把 `dist/` 同步到临时 worktree。
+3. 在任何 push 前运行 `node scripts/check-homepage-css.mjs`，从 worktree 的首页提取 `rel` 包含 `stylesheet` 的同站链接，并按 `BASE_PATH` 检查对应普通文件。
+4. 提交并 push 后记录 worktree 的 `gh-pages` commit SHA。没有产物变化时记录现有 SHA，并在日志中说明没有新提交。
+5. 轮询 `GET /repos/<owner>/<repo>/pages/builds/latest`，只接受 `status: built` 且 `commit` 等于该 SHA，同时确认 `gh-pages` ref 没有移动。
+6. 查询成功后，给公网首页与 CSS 请求附加本次检查标识，有限重试检查首页和其实际同站 CSS。首页与 CSS 必须分别返回精确的 `200`，CSS MIME 必须为 `text/css`，响应内容必须与待发布 worktree 中的对应文件一致。
 
-permissions:
-  contents: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: false
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 11.7.0
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm build
-        env:
-          SITE: https://${{ github.repository_owner }}.github.io
-          BASE_PATH: /${{ github.event.repository.name }}
-      - name: Publish to gh-pages
-        run: |
-          set -euo pipefail
-          git fetch origin gh-pages
-          git worktree add /tmp/gh-pages FETCH_HEAD
-          rsync -a --delete --exclude=.git dist/ /tmp/gh-pages/
-          git -C /tmp/gh-pages add -A
-          if git -C /tmp/gh-pages diff --cached --quiet; then
-            echo "No changes to deploy."
-          else
-            git -C /tmp/gh-pages \
-              -c user.name='github-actions[bot]' \
-              -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
-              commit -m 'deploy: 更新站点'
-            git -C /tmp/gh-pages push origin HEAD:gh-pages
-          fi
-          git worktree remove --force /tmp/gh-pages
-```
-
-workflow 使用 `SITE=https://<owner>.github.io` 与 `BASE_PATH=/<repo>` 构建；换成用户主页或自定义域名时修改这两项。部署提交由 `github-actions[bot]` 创建，`gh-pages` 分支只保留构建产物。PR 构建检查可以另加一个只执行 `pnpm build` 的工作流；当前 workflow 只在 `main` 或手动触发时运行。
+完整实现见 [`.github/workflows/main.yml`](../../.github/workflows/main.yml) 与 [`scripts/check-homepage-css.mjs`](../../scripts/check-homepage-css.mjs)。
 
 ### 11.4 回滚
 
@@ -350,15 +308,17 @@ workflow 使用 `SITE=https://<owner>.github.io` 与 `BASE_PATH=/<repo>` 构建�
 
 | 项目 | 方式 |
 | --- | --- |
-| 构建 | 提交前本地执行 `pnpm install --frozen-lockfile && pnpm build`；部署 workflow 在 `main` 上再次构建 |
+| 构建 | 提交前执行 `pnpm install --frozen-lockfile && pnpm build`；部署 workflow 在 `main` 上再次构建 |
 | 内容校验 | frontmatter schema 在构建时校验，缺字段即失败 |
-| 链接 | 构建后抽查站内路径与 base path；后续可加自动链接检查 |
+| 发布前 CSS | `scripts/check-homepage-css.mjs` 从待发布首页提取同站 stylesheet，按 base path 检查每个文件；没有引用或文件缺失时阻止 push |
+| 发布后 CSS | Pages build commit 与本次 `gh-pages` SHA 对齐后，有限重试检查公网首页和实际 CSS 的状态、MIME 与内容哈希 |
+| 链接 | 构建后抽查站内路径与 base path；发布前 CSS 检查覆盖首页样式资源 |
 | 可访问性 | 语义化标签、`lang`、焦点可见、对比度（含 `--faint` 日期/页脚）、键盘走查 |
 | 响应式 | 320px / 520px / 桌面视口检查 |
 | 主题 | 浅色、深色、系统偏好分别检查 |
 | 视觉回归 | UI 改动附前后对比截图（基线、视口、主题写明） |
 
-初版没有单元测试：站点逻辑极少，构建成功 + 人工走查是当前足够的质量门槛。引入非平凡逻辑（如分页、标签或自定义图片管线）时再补测试。
+站点没有客户端业务逻辑，构建成功、发布资源校验与人工走查是主要质量门槛。发布检查脚本使用 Node 内置测试覆盖路径映射、缺失文件、旧首页、重试和 MIME 错误。引入非平凡站点逻辑（如分页、标签或自定义图片管线）时再补对应测试。
 
 ## 13. SEO 与 RSS
 
@@ -403,7 +363,7 @@ workflow 使用 `SITE=https://<owner>.github.io` 与 `BASE_PATH=/<repo>` 构建�
 - `gh-pages` 初始构建产物、README、`.gitignore`、lockfile。
 - 本地 `pnpm build`、base path 构建与产物检查；发布命令、日期/页脚对比度与 RSS 可复现性已按 review 修正。
 - 文章 Markdown 支持仓库内相对图片，构建时适配站点 base path 并输出替代文字、宽高和懒加载属性；正文样式支持窄屏缩放。
-- 自动部署 workflow：推送 `main` 或手动触发时构建并更新 `gh-pages`。
+- 自动部署 workflow：推送 `main` 或手动触发时构建并更新 `gh-pages`，发布前检查首页 CSS，等待目标 Pages build 后检查公网首页与 CSS。
 
 待维护者完成 / 确认：
 

@@ -19,9 +19,11 @@
 
 1. 用 pnpm 安装依赖并执行 `pnpm build`，通过 `SITE=https://<owner>.github.io`、`BASE_PATH=/<repo>` 生成项目站点；
 2. fetch `gh-pages`，用临时 worktree + `rsync --delete --exclude=.git` 更新产物；
-3. 以 `github-actions[bot]` 身份提交并 push 到 `gh-pages`。
+3. 在 push 前从 worktree 的首页解析实际同站 CSS，确认每个引用文件存在；
+4. 以 `github-actions[bot]` 身份提交并 push 到 `gh-pages`，记录本次分支提交 SHA；
+5. 用 `pages: read` 查询 `/pages/builds/latest`，等待状态为 `built` 且 commit 与该 SHA 相同，再检查公网首页及其实际 CSS 的状态、MIME 与产物内容。
 
-workflow 使用 `contents: write`，不使用 `actions/configure-pages`、`actions/deploy-pages` 或 `github-pages` environment。Pages Source 保持 **Deploy from a branch → `gh-pages`**。
+workflow 使用 `contents: write` 与 `pages: read`，不使用 `actions/configure-pages`、`actions/deploy-pages` 或 `github-pages` environment。Pages Source 保持 **Deploy from a branch → `gh-pages`**。
 
 ## 备选方案
 
@@ -34,8 +36,8 @@ workflow 使用 `contents: write`，不使用 `actions/configure-pages`、`actio
 
 ## 后果
 
-- 正面：不需要修改 Pages Source；构建产物仍集中在 `gh-pages`；README 中的手动流程与自动流程使用同一套 git/rsync 逻辑。
-- 代价与风险：workflow 需要 `contents: write`；部署提交作者为 bot；`SITE`/`BASE_PATH` 按项目站点推导，换自定义域名时需修改 workflow；workflow 不在 PR 上运行，PR 构建仍靠本地检查。
+- 正面：不需要修改 Pages Source；构建产物仍集中在 `gh-pages`；README 中的手动流程与自动流程使用同一套 git/rsync 逻辑；错误的首页 CSS 引用会在 push 前阻止发布，旧 Pages 版本不会因短暂返回 200 而通过本次检查。
+- 代价与风险：workflow 需要 `contents: write` 与 `pages: read`；部署提交作者为 bot；`SITE`/`BASE_PATH` 按项目站点推导，换自定义域名时需修改 workflow；workflow 不在 PR 上运行，PR 构建仍靠本地检查；Pages API 或公网传播超出有限等待窗口时，发布会失败并保留可诊断日志。
 - 后续需要同步的文档 / 代码：`README.md` 部署一节、`initial-design.md` §11.3 / §16。
 
 ## 相关
