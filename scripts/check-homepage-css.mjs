@@ -445,7 +445,15 @@ function requestError(url, error, timeoutMs) {
   return `${url}: request failed: ${error.message}`;
 }
 
-async function fetchWithTimeout(fetchImpl, url, timeoutMs) {
+async function fetchWithTimeout(fetchImpl, url, timeoutMs, deadlineAt = Number.POSITIVE_INFINITY) {
+  const remaining = deadlineAt - Date.now();
+  const requestBudget = Math.min(timeoutMs, remaining);
+  if (requestBudget <= 0) {
+    const error = new Error('request timeout');
+    error.name = 'AbortError';
+    throw new Error(requestError(url, error, 0));
+  }
+
   const controller = new AbortController();
   let response;
   let timeout;
@@ -466,7 +474,7 @@ async function fetchWithTimeout(fetchImpl, url, timeoutMs) {
       const error = new Error('request timeout');
       error.name = 'AbortError';
       reject(error);
-    }, timeoutMs);
+    }, requestBudget);
   });
 
   try {
@@ -479,7 +487,7 @@ async function fetchWithTimeout(fetchImpl, url, timeoutMs) {
     } catch {
       // The request has already timed out or failed.
     }
-    throw new Error(requestError(url, error, timeoutMs));
+    throw new Error(requestError(url, error, requestBudget));
   } finally {
     clearTimeout(timeout);
   }
@@ -511,19 +519,47 @@ function describeSetDifference(expected, actual) {
   return details.join('; ');
 }
 
+function maxDurationError(maxDuration) {
+  return `homepage CSS check exceeded max duration of ${maxDuration} ms`;
+}
+
+async function waitForRetry(sleep, waitMs, deadlineAt) {
+  const remaining = deadlineAt - Date.now();
+  if (remaining <= 0) {
+    return false;
+  }
+
+  const waitDuration = Math.min(waitMs, remaining);
+  let deadlineTimer;
+  const deadlinePromise = new Promise((resolvePromise) => {
+    deadlineTimer = setTimeout(() => resolvePromise(false), remaining);
+  });
+  const sleepPromise = Promise.resolve()
+    .then(() => sleep(waitDuration))
+    .then(() => true);
+
+  try {
+    const completed = await Promise.race([sleepPromise, deadlinePromise]);
+    return completed && Date.now() < deadlineAt;
+  } finally {
+    clearTimeout(deadlineTimer);
+  }
+}
+
 async function checkRemoteAttempt({
   url,
   basePath,
   expected,
   fetchImpl,
   timeoutMs,
+  deadlineAt,
   cacheBust,
 }) {
   const errors = [];
   const homeRequestUrl = requestUrl(url, cacheBust);
   let homepageResult;
   try {
-    homepageResult = await fetchWithTimeout(fetchImpl, homeRequestUrl, timeoutMs);
+    homepageResult = await fetchWithTimeout(fetchImpl, homeRequestUrl, timeoutMs, deadlineAt);
   } catch (error) {
     return { errors: [error.message], stylesheets: [] };
   }
@@ -561,7 +597,7 @@ async function checkRemoteAttempt({
   for (const stylesheet of local) {
     let stylesheetResult;
     try {
-      stylesheetResult = await fetchWithTimeout(fetchImpl, requestUrl(stylesheet.canonicalUrl, cacheBust), timeoutMs);
+      stylesheetResult = await fetchWithTimeout(fetchImpl, requestUrl(stylesheet.canonicalUrl, cacheBust), timeoutMs, deadlineAt);
     } catch (error) {
       errors.push(error.message);
       continue;
@@ -628,10 +664,12 @@ export async function checkRemoteHomepageCss({
   }
 
   const deadline = Date.now() + maxDuration;
+  const deadlineFailure = maxDurationError(maxDuration);
   let lastErrors = ['no attempts were made'];
   let completedAttempts = 0;
   for (let attempt = 1; attempt <= totalAttempts; attempt += 1) {
     if (Date.now() >= deadline) {
+      lastErrors = [deadlineFailure, ...lastErrors];
       break;
     }
     completedAttempts = attempt;
@@ -641,32 +679,43 @@ export async function checkRemoteHomepageCss({
       expected,
       fetchImpl,
       timeoutMs: requestTimeoutMs,
+      deadlineAt: deadline,
       cacheBust: cacheBust ? `${cacheBust}-${attempt}` : undefined,
     });
-    if (result.errors.length === 0) {
+    const deadlineReached = Date.now() >= deadline;
+    if (result.errors.length === 0 && !deadlineReached) {
       logger.log(`Homepage CSS post-publish check passed on attempt ${attempt}/${totalAttempts}.`);
       logger.log(`Homepage: ${pageUrl.href}`);
       logger.log(`Stylesheets: ${result.stylesheets.map((stylesheet) => stylesheet.canonicalUrl).join(', ')}`);
       return { attempt, expected, stylesheets: result.stylesheets };
     }
 
-    lastErrors = result.errors;
+    lastErrors = deadlineReached
+      ? [deadlineFailure, ...result.errors]
+      : result.errors;
     logger.warn(`Homepage CSS check attempt ${attempt}/${totalAttempts} failed.`);
     for (const error of lastErrors) {
       logger.warn(`  ${error}`);
     }
+    if (deadlineReached) {
+      break;
+    }
     if (attempt < totalAttempts && waitMs > 0) {
-      const remaining = deadline - Date.now();
-      if (remaining <= 0) {
+      const waited = await waitForRetry(sleep, waitMs, deadline);
+      if (!waited) {
+        lastErrors = [deadlineFailure, ...lastErrors];
         break;
       }
-      await sleep(Math.min(waitMs, remaining));
     }
   }
 
-  const durationMessage = completedAttempts >= totalAttempts
-    ? `after ${totalAttempts} attempt(s)`
-    : `after ${completedAttempts} attempt(s) and ${maxDuration} ms`;
+  const deadlineReached = Date.now() >= deadline;
+  if (deadlineReached && lastErrors[0] !== deadlineFailure) {
+    lastErrors = [deadlineFailure, ...lastErrors];
+  }
+  const durationMessage = deadlineReached || completedAttempts < totalAttempts
+    ? `after ${completedAttempts} attempt(s) and ${maxDuration} ms`
+    : `after ${totalAttempts} attempt(s)`;
   throw new HomepageCssCheckFailure([
     `homepage CSS check failed ${durationMessage}`,
     ...lastErrors,

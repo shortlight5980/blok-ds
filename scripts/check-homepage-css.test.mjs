@@ -43,12 +43,18 @@ function response(body, status = 200, headers = {}) {
   return new Response(body, { status, headers });
 }
 
-function delayedBodyResponse(body, delayMs, signal) {
+function delayedBodyResponse(
+  body,
+  delayMs,
+  signal,
+  contentType = 'text/css; charset=utf-8',
+  responseUrl = stylesheetUrl,
+) {
   return {
     status: 200,
     statusText: 'OK',
-    headers: new Headers({ 'content-type': 'text/css; charset=utf-8' }),
-    url: stylesheetUrl,
+    headers: new Headers({ 'content-type': contentType }),
+    url: responseUrl,
     async arrayBuffer() {
       await new Promise((resolve, reject) => {
         let timer;
@@ -191,6 +197,59 @@ describe('public homepage CSS validation', () => {
         && error.message.includes('timed out after 60 ms'),
     );
 
+    assert.ok(Date.now() - startedAt < 200);
+  });
+
+  it('fails when homepage and CSS latency exceeds the total deadline', async () => {
+    const root = await createPublishedRoot();
+
+    await assert.rejects(
+      checkRemoteHomepageCss({
+        url: homepageUrl,
+        rootDir: root,
+        basePath: '/blok-ds',
+        attempts: 1,
+        delayMs: 0,
+        timeoutMs: 90,
+        maxDurationMs: 100,
+        fetchImpl: async (url, { signal }) => new URL(url).pathname === '/blok-ds/'
+          ? delayedBodyResponse(currentHomepage, 70, signal, 'text/html', homepageUrl)
+          : delayedBodyResponse(stylesheetContent, 70, signal),
+        logger: logger(),
+      }),
+      (error) => error instanceof HomepageCssCheckFailure
+        && error.message.includes('exceeded max duration of 100 ms'),
+    );
+  });
+
+  it('stops during a retry wait when the total deadline expires', async () => {
+    const root = await createPublishedRoot();
+    const startedAt = Date.now();
+    let sleepCalls = 0;
+
+    await assert.rejects(
+      checkRemoteHomepageCss({
+        url: homepageUrl,
+        rootDir: root,
+        basePath: '/blok-ds',
+        attempts: 2,
+        delayMs: 250,
+        timeoutMs: 100,
+        maxDurationMs: 60,
+        fetchImpl: async (url) => new URL(url).pathname === '/blok-ds/'
+          ? response(currentHomepage, 200, { 'content-type': 'text/html' })
+          : response('not found', 404, { 'content-type': 'text/html' }),
+        sleep: async () => {
+          sleepCalls += 1;
+          await new Promise((resolvePromise) => setTimeout(resolvePromise, 250));
+        },
+        logger: logger(),
+      }),
+      (error) => error instanceof HomepageCssCheckFailure
+        && error.message.includes('exceeded max duration of 60 ms'),
+    );
+
+    assert.equal(sleepCalls, 1);
     assert.ok(Date.now() - startedAt < 200);
   });
 
