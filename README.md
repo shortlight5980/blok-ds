@@ -72,25 +72,40 @@ listImage:
 
 这是一个公开仓库，站点已通过 GitHub Pages 上线。访问地址为 [https://shortlight5980.github.io/blok-ds/](https://shortlight5980.github.io/blok-ds/)。
 
-推送到 `main` 后，[发布工作流](.github/workflows/main.yml) 会构建站点并把 `dist/` 中的构建产物推送到 `gh-pages`。GitHub Pages 的发布来源是 **Deploy from a branch**，使用 `gh-pages` 分支的 `/ (root)` 目录。
+推送到 `main` 后，[发布工作流](.github/workflows/main.yml) 已配置为构建站点，把 `dist/` 中的构建产物推送到 `gh-pages`，并在推送前校验首页实际引用的 CSS 文件。工作流还会等待 GitHub Pages 报告本次 `gh-pages` 提交已构建，再用公网首页响应及其实际 CSS 响应完成有限重试校验。自动检查的端到端验收将在本检查器合入 `main` 后，由下一次真实 Pages 发布完成。GitHub Pages 的发布来源是 **Deploy from a branch**，使用 `gh-pages` 分支的 `/ (root)` 目录。
 
-工作流使用 `SITE=https://shortlight5980.github.io` 和 `BASE_PATH=/blok-ds` 构建，也可在 Actions 页面手动触发。
+工作流使用 `SITE=https://shortlight5980.github.io` 和 `BASE_PATH=/blok-ds` 构建，也可在 Actions 页面手动触发。校验逻辑位于 [`scripts/check-homepage-css.mjs`](scripts/check-homepage-css.mjs)，本地回归测试使用 `pnpm test:homepage-css`。在自动验收完成前，可以按下方命令手动执行发布前与发布后检查。
 
-如需手动发布，维护者可以按以下命令更新 `gh-pages`。
+如需手动发布，维护者可以按以下命令更新 `gh-pages`。同步产物后，先运行同一个发布前校验，再提交和推送。
 
 ```bash
 set -e
-SITE=https://shortlight5980.github.io BASE_PATH=/blok-ds pnpm build
+export SITE=https://shortlight5980.github.io
+export BASE_PATH=/blok-ds
+pnpm build
 git fetch origin gh-pages
 git worktree add /tmp/blok-ds-pages origin/gh-pages
-rsync -a --delete --exclude=.git dist/ /tmp/blok-ds-pages/
+rsync -a --checksum --delete --exclude=.git dist/ /tmp/blok-ds-pages/
+node scripts/check-homepage-css.mjs \
+  --root /tmp/blok-ds-pages \
+  --base-path "$BASE_PATH" \
+  --origin "$SITE"
 git -C /tmp/blok-ds-pages add -A
 git -C /tmp/blok-ds-pages diff --cached --quiet || git -C /tmp/blok-ds-pages commit -m "deploy: 更新站点"
 git -C /tmp/blok-ds-pages push origin HEAD:gh-pages
+node scripts/check-homepage-css.mjs \
+  --url "$SITE$BASE_PATH/" \
+  --root /tmp/blok-ds-pages \
+  --base-path "$BASE_PATH" \
+  --attempts 20 \
+  --delay-ms 15000 \
+  --timeout-ms 5000 \
+  --max-duration-ms 300000 \
+  --cache-bust "manual-$(date +%s)"
 git worktree remove --force /tmp/blok-ds-pages
 ```
 
-`SITE` / `BASE_PATH` 必须与最终访问地址一致。`rsync` 的 `--exclude=.git` 用于保护 worktree 的 `.git` 文件。`set -e` 会在推送失败时保留 worktree 与发布提交，便于排查后重推。
+`SITE` / `BASE_PATH` 必须与最终访问地址一致。`rsync` 的 `--exclude=.git` 用于保护 worktree 的 `.git` 文件。`set -e` 会在校验或推送失败时保留 worktree 与发布提交，便于排查后重推。自动工作流已配置相同的发布前检查、Pages 构建等待和公网检查，端到端结果待本检查器合入 `main` 后的下一次真实发布确认。
 
 `public/.nojekyll` 会随构建进入产物，避免 Jekyll 忽略 `_astro/` 资源。
 
