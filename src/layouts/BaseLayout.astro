@@ -54,7 +54,8 @@ const ogImageUrl = new URL(url('/og-image.png'), Astro.site ?? Astro.url);
     <meta name="generator" content={Astro.generator} />
   </head>
   <body>
-    <div class={header ? 'site' : 'site site--no-header'}>
+    <slot name="page-background" />
+    <div class:list={{ site: true, 'site--no-header': !header, 'site--home': home }}>
       {header && (
         <header class="site-header">
           <div class="site-identity">

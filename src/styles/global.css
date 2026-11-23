@@ -9,6 +9,11 @@
   --accent: #a8502d;
   --code-bg: #f6f3ec;
   --selection: rgba(168, 80, 45, 0.16);
+  --ocean-shark: rgba(76, 84, 94, 0.42);
+  --ocean-shark-deep: rgba(96, 104, 114, 0.24);
+  --ocean-fish: rgba(86, 96, 108, 0.34);
+  --ocean-current: rgba(110, 118, 128, 0.2);
+  --ocean-ripple: rgba(82, 91, 102, 0.38);
 
   --serif: "Noto Serif SC", "Noto Serif CJK SC", "Source Han Serif SC", "Songti SC", "STSong",
     "SimSun", Georgia, "Times New Roman", serif;
@@ -29,6 +34,11 @@
     --accent: #d98b6a;
     --code-bg: #201e1b;
     --selection: rgba(217, 139, 106, 0.22);
+    --ocean-shark: rgba(190, 202, 214, 0.34);
+    --ocean-shark-deep: rgba(158, 176, 194, 0.2);
+    --ocean-fish: rgba(174, 190, 206, 0.28);
+    --ocean-current: rgba(144, 160, 176, 0.16);
+    --ocean-ripple: rgba(186, 204, 222, 0.36);
   }
 }
 
@@ -83,6 +93,101 @@ a:hover {
   max-width: calc(var(--content-width) + 3rem);
   margin: 0 auto;
   padding: 3rem 1.5rem 4rem;
+}
+
+.site--home {
+  position: relative;
+  z-index: 1;
+  background: var(--bg);
+}
+
+.ascii-ocean {
+  display: none;
+}
+
+.ascii-ocean-toggle {
+  display: none;
+  position: fixed;
+  right: max(1rem, calc((100vw - var(--content-width) - 3rem) / 2 - 3rem));
+  bottom: 1.5rem;
+  z-index: 2;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 1px solid var(--rule);
+  border-radius: 50%;
+  background: var(--bg);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.ascii-ocean-toggle:hover {
+  color: var(--fg);
+}
+
+.ascii-ocean-toggle svg {
+  display: block;
+  width: 1rem;
+  height: 1rem;
+  fill: currentColor;
+}
+
+.ascii-ocean-toggle .play-icon {
+  display: none;
+}
+
+.ascii-ocean-toggle[data-paused="true"] .pause-icon {
+  display: none;
+}
+
+.ascii-ocean-toggle[data-paused="true"] .play-icon {
+  display: block;
+}
+
+@media (min-width: 1024px) {
+  .ascii-ocean {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    display: block;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+  }
+
+  .ascii-ocean-toggle {
+    display: inline-flex;
+  }
+
+  .site--home::before,
+  .site--home::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    z-index: 1;
+    width: clamp(4rem, 8vw, 7rem);
+    pointer-events: none;
+  }
+
+  .site--home::before {
+    right: 100%;
+    background: linear-gradient(to right, transparent, var(--bg));
+  }
+
+  .site--home::after {
+    left: 100%;
+    background: linear-gradient(to left, transparent, var(--bg));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ascii-ocean,
+  .ascii-ocean-toggle {
+    display: none !important;
+  }
 }
 
 .site-header {
