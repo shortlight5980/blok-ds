@@ -2,6 +2,9 @@
 title: "我给博客改了个名，分享 PR 里还是我的中文大名"
 date: 2026-11-22
 description: "一次博客改名，为什么做分享的 Agent 还在用旧名字？从一条 PR 的返工说起，聊聊跨任务的变更通知，以及如何在合并前校验版本。"
+listImage:
+  src: ./_images/blog-rename-agent-coordination/rename-propagation.svg
+  alt: 改名变更与分享任务同步流程图
 ---
 
 最近在测 DeepSeek Super Agent 编程，我就拿了个刚初始化的个人博客仓库来试。先让 DS Bot 从第一性原理出发，捋一捋这个博客该做点什么。它提了几个需求，其中两个特别朴素。把首页显示的仓库名换成我的名字，好歹一眼能看出是个人博客。再加几个分享组件。
@@ -19,6 +22,8 @@ description: "一次博客改名，为什么做分享的 Agent 还在用旧名�
 我改名字的那句话，就这么送到了改名的 worker 手里。做分享的 worker 在另一个话题，手上的需求还停留在中文名那一版。
 
 从它的角度看，用中文名完全合理。它缺的就一句话。偏偏这句话发在别处，改的是两个任务都要用的东西。
+
+![改名变更没有同步到分享任务的实际经过，以及文章提出的版本校验设想](./_images/blog-rename-agent-coordination/rename-propagation.svg)
 
 这次有 DS Bot 在审阅时看到了两边的差异。下一次，能不能在我刚改主意的时候，就把这件事交给 Super Agent 自己处理？
 
