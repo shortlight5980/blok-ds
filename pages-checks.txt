@@ -1,0 +1,4 @@
+320px home: image HTTP 200 image/svg+xml 52.1×96.0, scrollWidth=320, /blok-ds/_astro/rename-propagation.BFed_UrW_n5MVD.svg
+320px article: image HTTP 200 image/svg+xml 280.0×516.0, scrollWidth=320, /blok-ds/_astro/rename-propagation.BFed_UrW_n5MVD.svg
+1440px home: image HTTP 200 image/svg+xml 52.1×96.0, scrollWidth=1440, /blok-ds/_astro/rename-propagation.BFed_UrW_n5MVD.svg
+1440px article: image HTTP 200 image/svg+xml 420.0×774.0, scrollWidth=1440, /blok-ds/_astro/rename-propagation.BFed_UrW_n5MVD.svg
