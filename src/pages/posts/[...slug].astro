@@ -1,6 +1,6 @@
 ---
 import { render, type CollectionEntry } from 'astro:content';
-import { AUTHOR, AUTHOR_TAGLINE } from '../../consts';
+import { AUTHOR } from '../../consts';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getPosts } from '../../lib/posts';
 import { formatDate, postPath, url } from '../../lib/site';
@@ -48,7 +48,6 @@ const hasToc = sections.length >= 3;
         <span>作者：{AUTHOR}</span>
         <a href={url('/')}>返回首页</a>
       </p>
-      <p class="post-author-tagline">{AUTHOR_TAGLINE}</p>
     </header>
 
     <div class:list={['post-body', { 'post-body--with-toc': hasToc }]}>
