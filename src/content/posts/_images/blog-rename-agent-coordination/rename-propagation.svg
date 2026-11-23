@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="420" height="774" viewBox="0 0 420 774" role="img" aria-labelledby="diagram-title diagram-desc" xml:lang="zh-CN">
+  <title id="diagram-title">博客改名如何影响分享任务</title>
+  <desc id="diagram-desc">实际经过：改名任务从中文名换成英文拼写。另一个话题里的分享任务仍用中文名提交，审阅发现偏差后修正。设想：改名任务上报变更，router 判断影响并把新版 v2 送到分享任务。交付时附上所用版本，CAS 原子比较交付版本与当前版本，一致则接受，不一致则待复核。</desc>
+  <defs>
+    <marker id="actual-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M1 1 9 5 1 9Z" fill="#765442"/>
+    </marker>
+    <marker id="proposal-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M1 1 9 5 1 9Z" fill="#356058"/>
+    </marker>
+  </defs>
+  <g font-family="'PingFang SC', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Noto Sans SC', sans-serif" fill="#24211e">
+    <rect x="4" y="4" width="412" height="368" rx="16" fill="#faf5ec" stroke="#bda897" stroke-width="2"/>
+    <text x="22" y="43" font-size="26" font-weight="700">这次实际经过</text>
+    <g fill="#fffdf8" stroke="#aa8b78" stroke-width="1.5">
+      <rect x="20" y="62" width="172" height="44" rx="8"/>
+      <rect x="228" y="62" width="172" height="44" rx="8"/>
+      <rect x="20" y="126" width="172" height="44" rx="8"/>
+      <rect x="228" y="126" width="172" height="44" rx="8"/>
+      <rect x="20" y="190" width="172" height="44" rx="8"/>
+      <rect x="228" y="190" width="172" height="44" rx="8"/>
+      <rect x="86" y="266" width="248" height="42" rx="8" fill="#f3e4d6"/>
+      <rect x="86" y="324" width="248" height="34" rx="8"/>
+    </g>
+    <g fill="none" stroke="#765442" stroke-width="2.3" marker-end="url(#actual-arrow)">
+      <path d="M106 108v15"/>
+      <path d="M106 172v15"/>
+      <path d="M314 108v15"/>
+      <path d="M314 172v15"/>
+      <path d="M106 236v14h60v13"/>
+      <path d="M314 236v14h-60v13"/>
+      <path d="M210 310v11"/>
+    </g>
+    <g text-anchor="middle" font-size="23">
+      <text x="106" y="92" font-weight="700">改名 worker</text>
+      <text x="314" y="92" font-weight="700">分享 worker</text>
+      <text x="106" y="156">先用中文名</text>
+      <text x="314" y="156">仍持有中文名</text>
+      <text x="106" y="220">改用英文拼写</text>
+      <text x="314" y="220">提交分享 PR</text>
+      <text x="210" y="295" font-weight="700">审阅发现偏差</text>
+      <text x="210" y="349">修正分享 PR</text>
+    </g>
+    <rect x="4" y="390" width="412" height="380" rx="16" fill="#edf5f1" stroke="#799d94" stroke-width="2" stroke-dasharray="6 4"/>
+    <text x="22" y="429" font-size="26" font-weight="700">文章里的下一步设想</text>
+    <g fill="#fcfffd" stroke="#799d94" stroke-width="1.5">
+      <rect x="40" y="449" width="340" height="38" rx="8"/>
+      <rect x="40" y="503" width="340" height="38" rx="8"/>
+      <rect x="40" y="557" width="340" height="38" rx="8"/>
+      <rect x="40" y="611" width="340" height="38" rx="8"/>
+      <rect x="20" y="684" width="172" height="70" rx="8"/>
+      <rect x="228" y="684" width="172" height="70" rx="8"/>
+    </g>
+    <g fill="none" stroke="#356058" stroke-width="2.3" stroke-dasharray="4 3" marker-end="url(#proposal-arrow)">
+      <path d="M210 489v11"/>
+      <path d="M210 543v11"/>
+      <path d="M210 597v11"/>
+      <path d="M210 651v13H106v17"/>
+      <path d="M210 651v13h104v17"/>
+    </g>
+    <g text-anchor="middle" font-size="23">
+      <text x="210" y="476">改名 worker 上报变更</text>
+      <text x="210" y="530">router 判断任务依赖</text>
+      <text x="210" y="584">分享 worker 收到 v2</text>
+      <text x="210" y="638" font-weight="700">交付附版本 · CAS 校验</text>
+      <text x="106" y="713">版本一致</text>
+      <text x="314" y="713">版本已变更</text>
+      <text x="106" y="741" font-weight="700">接受</text>
+      <text x="314" y="741" font-weight="700">待复核</text>
+    </g>
+  </g>
+</svg>
