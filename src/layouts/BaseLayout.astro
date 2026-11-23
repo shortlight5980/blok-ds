@@ -110,8 +110,10 @@ const ogImageUrl = new URL(url('/og-image.png'), Astro.site ?? Astro.url);
 
         const updateToggle = () => {
           const isDark = getTheme() === 'dark';
-          toggle.setAttribute('aria-label', isDark ? '切换到浅色模式' : '切换到夜间模式');
+          const nextThemeLabel = isDark ? '浅色模式' : '夜间模式';
+          toggle.setAttribute('aria-label', `切换到${nextThemeLabel}`);
           toggle.setAttribute('aria-pressed', String(isDark));
+          toggle.setAttribute('title', `切换到${nextThemeLabel}`);
           if (label) label.textContent = isDark ? '夜间模式' : '浅色模式';
         };
 
