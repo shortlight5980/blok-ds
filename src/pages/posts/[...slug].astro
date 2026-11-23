@@ -33,6 +33,7 @@ const { post, previousPost, nextPost } = Astro.props;
 const { date, updatedDate } = post.data;
 const { Content, headings } = await render(post);
 const sections = headings.filter(({ depth }) => depth === 2);
+const hasToc = sections.length >= 3;
 ---
 
 <BaseLayout title={post.data.title} description={post.data.description} type="article" header={false}>
@@ -50,19 +51,21 @@ const sections = headings.filter(({ depth }) => depth === 2);
       <p class="post-author-tagline">{AUTHOR_TAGLINE}</p>
     </header>
 
-    {sections.length >= 3 && (
-      <nav class="post-toc" aria-label="目录">
-        <p class="post-toc-title">目录</p>
-        <ul>
-          {sections.map(({ slug, text }) => (
-            <li><a href={`#${encodeURIComponent(slug)}`}>{text}</a></li>
-          ))}
-        </ul>
-      </nav>
-    )}
+    <div class:list={['post-body', { 'post-body--with-toc': hasToc }]}>
+      {hasToc && (
+        <nav class="post-toc" aria-label="目录">
+          <p class="post-toc-title">目录</p>
+          <ul>
+            {sections.map(({ slug, text }) => (
+              <li><a href={`#${encodeURIComponent(slug)}`}>{text}</a></li>
+            ))}
+          </ul>
+        </nav>
+      )}
 
-    <div class="prose">
-      <Content />
+      <div class="prose">
+        <Content />
+      </div>
     </div>
 
     {(previousPost || nextPost) && (
