@@ -240,15 +240,11 @@ main {
   white-space: nowrap;
 }
 
-.post-byline,
-.post-author-tagline {
+.post-byline {
   color: var(--muted);
   font-size: 0.9rem;
   line-height: 1.6;
   overflow-wrap: anywhere;
-}
-
-.post-byline {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
@@ -260,10 +256,6 @@ main {
   color: var(--accent);
   text-decoration: underline;
   text-underline-offset: 0.2em;
-}
-
-.post-author-tagline {
-  margin: 0.25rem 0 0;
 }
 
 .post-toc {
