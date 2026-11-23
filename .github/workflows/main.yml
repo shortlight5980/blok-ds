@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  pages: read
 
 concurrency:
   group: pages
@@ -15,6 +16,9 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      SITE: https://${{ github.repository_owner }}.github.io
+      BASE_PATH: /${{ github.event.repository.name }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -26,23 +30,110 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
+      - name: Publish and verify homepage CSS
         env:
-          SITE: https://${{ github.repository_owner }}.github.io
-          BASE_PATH: /${{ github.event.repository.name }}
-      - name: Publish to gh-pages
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          worktree=/tmp/gh-pages
+          cleanup() {
+            git worktree remove --force "$worktree" >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+
           git fetch origin gh-pages
-          git worktree add /tmp/gh-pages FETCH_HEAD
-          rsync -a --delete --exclude=.git dist/ /tmp/gh-pages/
-          git -C /tmp/gh-pages add -A
-          if git -C /tmp/gh-pages diff --cached --quiet; then
-            echo "No changes to deploy."
+          git worktree add "$worktree" FETCH_HEAD
+          rsync -a --checksum --delete --exclude=.git dist/ "$worktree/"
+
+          node scripts/check-homepage-css.mjs \
+            --root "$worktree" \
+            --base-path "$BASE_PATH" \
+            --origin "$SITE"
+
+          git -C "$worktree" add -A
+          if git -C "$worktree" diff --cached --quiet; then
+            echo "No changes to deploy. Verifying the existing gh-pages commit."
           else
-            git -C /tmp/gh-pages \
+            git -C "$worktree" \
               -c user.name='github-actions[bot]' \
               -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
               commit -m 'deploy: 更新站点'
-            git -C /tmp/gh-pages push origin HEAD:gh-pages
+            git -C "$worktree" push origin HEAD:gh-pages
           fi
-          git worktree remove --force /tmp/gh-pages
+
+          pages_sha="$(git -C "$worktree" rev-parse HEAD)"
+          echo "gh-pages commit under verification: $pages_sha"
+
+          pages_attempts=20
+          pages_delay=15
+          pages_ready=false
+          for attempt in $(seq 1 "$pages_attempts"); do
+            branch_sha=''
+            branch_matches=false
+            if branch_sha="$(gh api \
+              -H 'Accept: application/vnd.github+json' \
+              -H 'X-GitHub-Api-Version: 2022-11-28' \
+              -H 'Cache-Control: no-cache' \
+              "repos/$GITHUB_REPOSITORY/git/ref/heads/gh-pages" \
+              --jq '.object.sha' 2>&1)"; then
+              if [ "$branch_sha" != "$pages_sha" ]; then
+                echo "::error::gh-pages moved during verification. Expected $pages_sha, found $branch_sha."
+                exit 1
+              fi
+              branch_matches=true
+            else
+              echo "::warning::Unable to read the gh-pages ref on Pages build attempt $attempt/$pages_attempts: $branch_sha"
+            fi
+
+            latest_build=''
+            if latest_build="$(gh api \
+              -H 'Accept: application/vnd.github+json' \
+              -H 'X-GitHub-Api-Version: 2022-11-28' \
+              -H 'Cache-Control: no-cache' \
+              "repos/$GITHUB_REPOSITORY/pages/builds/latest" \
+              --jq '[.status, (.commit // ""), (.error.message // "")] | @tsv' 2>&1)"; then
+              IFS=$'\t' read -r build_status build_commit build_error <<< "$latest_build"
+              echo "Pages build attempt $attempt/$pages_attempts: status=${build_status:-unknown}, commit=${build_commit:-unknown}, error=${build_error:-none}"
+              if [ "$build_commit" = "$pages_sha" ] && [ "$build_status" = "errored" ]; then
+                echo "::error::Pages build for the latest commit errored: ${build_error:-unknown error}. Expected commit $pages_sha."
+                exit 1
+              fi
+              if [ "$branch_matches" = true ] && [ "$build_status" = "built" ] && [ "$build_commit" = "$pages_sha" ]; then
+                pages_ready=true
+                break
+              fi
+            else
+              echo "::warning::Unable to read the latest Pages build on attempt $attempt/$pages_attempts: $latest_build"
+            fi
+
+            if [ "$attempt" -lt "$pages_attempts" ]; then
+              sleep "$pages_delay"
+            fi
+          done
+
+          if [ "$pages_ready" != true ]; then
+            echo "::error::Pages did not report a built deployment for gh-pages commit $pages_sha within $pages_attempts attempts."
+            exit 1
+          fi
+
+          final_branch_sha="$(gh api \
+            -H 'Accept: application/vnd.github+json' \
+            -H 'X-GitHub-Api-Version: 2022-11-28' \
+            -H 'Cache-Control: no-cache' \
+            "repos/$GITHUB_REPOSITORY/git/ref/heads/gh-pages" \
+            --jq '.object.sha')"
+          if [ "$final_branch_sha" != "$pages_sha" ]; then
+            echo "::error::gh-pages changed before the public check. Expected $pages_sha, found $final_branch_sha."
+            exit 1
+          fi
+          echo "Pages build is built for gh-pages commit $pages_sha. Starting the public homepage CSS check."
+
+          node scripts/check-homepage-css.mjs \
+            --url "$SITE$BASE_PATH/" \
+            --root "$worktree" \
+            --base-path "$BASE_PATH" \
+            --attempts 20 \
+            --delay-ms 15000 \
+            --timeout-ms 5000 \
+            --max-duration-ms 300000 \
+            --cache-bust "${pages_sha}-${GITHUB_RUN_ID}"
