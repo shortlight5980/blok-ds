@@ -43,6 +43,35 @@ function response(body, status = 200, headers = {}) {
   return new Response(body, { status, headers });
 }
 
+function delayedBodyResponse(body, delayMs, signal) {
+  return {
+    status: 200,
+    statusText: 'OK',
+    headers: new Headers({ 'content-type': 'text/css; charset=utf-8' }),
+    url: stylesheetUrl,
+    async arrayBuffer() {
+      await new Promise((resolve, reject) => {
+        let timer;
+        const abort = () => {
+          clearTimeout(timer);
+          const error = new Error('aborted');
+          error.name = 'AbortError';
+          reject(error);
+        };
+        timer = setTimeout(() => {
+          signal.removeEventListener('abort', abort);
+          resolve();
+        }, delayMs);
+        signal.addEventListener('abort', abort, { once: true });
+        if (signal.aborted) {
+          abort();
+        }
+      });
+      return new Response(body).arrayBuffer();
+    },
+  };
+}
+
 function logger() {
   const messages = [];
   return {
@@ -138,6 +167,31 @@ describe('public homepage CSS validation', () => {
     assert.equal(new URL(calls[1].url).pathname, '/blok-ds/_astro/main.css');
     assert.equal(calls[1].options.redirect, 'manual');
     assert.equal(calls[1].options.cache, 'no-store');
+  });
+
+  it('times out when a stylesheet response body is delayed', async () => {
+    const root = await createPublishedRoot();
+    const startedAt = Date.now();
+
+    await assert.rejects(
+      checkRemoteHomepageCss({
+        url: homepageUrl,
+        rootDir: root,
+        basePath: '/blok-ds',
+        attempts: 1,
+        delayMs: 0,
+        timeoutMs: 60,
+        maxDurationMs: 100,
+        fetchImpl: async (url, { signal }) => new URL(url).pathname === '/blok-ds/'
+          ? response(currentHomepage, 200, { 'content-type': 'text/html' })
+          : delayedBodyResponse(stylesheetContent, 250, signal),
+        logger: logger(),
+      }),
+      (error) => error instanceof HomepageCssCheckFailure
+        && error.message.includes('timed out after 60 ms'),
+    );
+
+    assert.ok(Date.now() - startedAt < 200);
   });
 
   it('does not accept an older homepage that happens to have healthy CSS', async () => {

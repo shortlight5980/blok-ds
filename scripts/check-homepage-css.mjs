@@ -447,14 +447,38 @@ function requestError(url, error, timeoutMs) {
 
 async function fetchWithTimeout(fetchImpl, url, timeoutMs) {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    return await fetchImpl(url, {
+  let response;
+  let timeout;
+  const request = (async () => {
+    response = await fetchImpl(url, {
       signal: controller.signal,
       redirect: 'manual',
       cache: 'no-store',
     });
+    return {
+      response,
+      body: Buffer.from(await response.arrayBuffer()),
+    };
+  })();
+  const deadline = new Promise((_, reject) => {
+    timeout = setTimeout(() => {
+      controller.abort();
+      const error = new Error('request timeout');
+      error.name = 'AbortError';
+      reject(error);
+    }, timeoutMs);
+  });
+
+  try {
+    return await Promise.race([request, deadline]);
   } catch (error) {
+    controller.abort();
+    try {
+      const cancellation = response?.body?.cancel?.();
+      cancellation?.catch(() => {});
+    } catch {
+      // The request has already timed out or failed.
+    }
     throw new Error(requestError(url, error, timeoutMs));
   } finally {
     clearTimeout(timeout);
@@ -487,14 +511,6 @@ function describeSetDifference(expected, actual) {
   return details.join('; ');
 }
 
-async function readResponseBody(response, url) {
-  try {
-    return Buffer.from(await response.arrayBuffer());
-  } catch (error) {
-    throw new Error(`${url}: unable to read response body: ${error.message}`);
-  }
-}
-
 async function checkRemoteAttempt({
   url,
   basePath,
@@ -505,17 +521,14 @@ async function checkRemoteAttempt({
 }) {
   const errors = [];
   const homeRequestUrl = requestUrl(url, cacheBust);
-  let homepageResponse;
+  let homepageResult;
   try {
-    homepageResponse = await fetchWithTimeout(fetchImpl, homeRequestUrl, timeoutMs);
+    homepageResult = await fetchWithTimeout(fetchImpl, homeRequestUrl, timeoutMs);
   } catch (error) {
     return { errors: [error.message], stylesheets: [] };
   }
 
-  const homepageBody = await readResponseBody(homepageResponse, url).catch((error) => ({ error }));
-  if (homepageBody.error) {
-    return { errors: [homepageBody.error.message], stylesheets: [] };
-  }
+  const { response: homepageResponse, body: homepageBody } = homepageResult;
 
   const page = ensurePageUrl(url);
   if (homepageResponse.status !== 200 || mediaType(homepageResponse) !== 'text/html') {
@@ -546,19 +559,15 @@ async function checkRemoteAttempt({
   }
 
   for (const stylesheet of local) {
-    let response;
+    let stylesheetResult;
     try {
-      response = await fetchWithTimeout(fetchImpl, requestUrl(stylesheet.canonicalUrl, cacheBust), timeoutMs);
+      stylesheetResult = await fetchWithTimeout(fetchImpl, requestUrl(stylesheet.canonicalUrl, cacheBust), timeoutMs);
     } catch (error) {
       errors.push(error.message);
       continue;
     }
 
-    const body = await readResponseBody(response, stylesheet.canonicalUrl).catch((error) => ({ error }));
-    if (body.error) {
-      errors.push(body.error.message);
-      continue;
-    }
+    const { response, body } = stylesheetResult;
 
     if (response.status !== 200 || mediaType(response) !== 'text/css') {
       errors.push(`${stylesheet.url.href}: ${responseDescription(response)}`);
