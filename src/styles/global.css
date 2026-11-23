@@ -272,6 +272,10 @@ main {
   font-weight: 600;
 }
 
+.post-toc-disclosure {
+  display: none;
+}
+
 .post-toc ul {
   margin: 0;
   padding-inline-start: 1.4em;
@@ -584,6 +588,29 @@ main {
 
   .post-list time {
     font-size: 0.72rem;
+  }
+
+  .post-toc {
+    padding-block: 0;
+  }
+
+  .post-toc > .post-toc-title,
+  .post-toc > ul {
+    display: none;
+  }
+
+  .post-toc-disclosure {
+    display: block;
+  }
+
+  .post-toc-disclosure summary {
+    padding-block: 0.65rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .post-toc-disclosure ul {
+    padding-bottom: 0.9rem;
   }
 
   .site-footer {
