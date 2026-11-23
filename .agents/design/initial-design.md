@@ -225,6 +225,7 @@ URL 规范：构建配置 `trailingSlash: 'always'`，页面地址以 `/` 结尾
 - 仅保留链接颜色过渡；`prefers-reduced-motion` 下关闭。
 - 焦点环使用 accent 色，`outline-offset` 3px。
 - 主题切换使用带太阳/月亮图标的 Switch，滑块和图标状态有短时过渡；`prefers-reduced-motion` 下关闭过渡。
+- 主题按钮交互初始化前保持隐藏，启用后使用固定的「夜间模式」可访问名称，并用 `aria-pressed` 表达当前状态；禁用 JavaScript 时继续跟随系统外观并跳过该控件。
 - 主题切换按钮显示当前模式，支持键盘操作；手动选择保存到浏览器本地，并在页面间保留。
 - 复制入口由文章页脚本生成，用剪贴板 API 写入文本，并通过状态消息反馈成功或失败。关闭 JavaScript 后，页面显示正文、代码及 Markdown 语言标签。
 

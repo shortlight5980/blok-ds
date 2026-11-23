@@ -159,6 +159,10 @@ a:hover {
   margin-bottom: 1.5rem;
 }
 
+.theme-toggle[hidden] {
+  display: none;
+}
+
 .theme-toggle {
   display: inline-flex;
   align-items: center;

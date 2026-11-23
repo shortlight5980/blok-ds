@@ -110,10 +110,9 @@ const ogImageUrl = new URL(url('/og-image.png'), Astro.site ?? Astro.url);
 
         const updateToggle = () => {
           const isDark = getTheme() === 'dark';
-          const nextThemeLabel = isDark ? '浅色模式' : '夜间模式';
-          toggle.setAttribute('aria-label', `切换到${nextThemeLabel}`);
+          toggle.setAttribute('aria-label', '夜间模式');
           toggle.setAttribute('aria-pressed', String(isDark));
-          toggle.setAttribute('title', `切换到${nextThemeLabel}`);
+          toggle.setAttribute('title', '夜间模式');
           if (label) label.textContent = isDark ? '夜间模式' : '浅色模式';
         };
 
@@ -130,6 +129,7 @@ const ogImageUrl = new URL(url('/og-image.png'), Astro.site ?? Astro.url);
         media.addEventListener('change', () => {
           if (!root.dataset.theme) updateToggle();
         });
+        toggle.hidden = false;
       })();
     </script>
   </body>
