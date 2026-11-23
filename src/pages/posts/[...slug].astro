@@ -32,7 +32,9 @@ interface Props {
 const { post, previousPost, nextPost } = Astro.props;
 const { date, updatedDate } = post.data;
 const { Content, headings } = await render(post);
-const sections = headings.filter(({ depth }) => depth === 2);
+const sections = headings
+  .filter(({ depth }) => depth === 2)
+  .map(({ slug, text }) => ({ href: `#${encodeURIComponent(slug)}`, text }));
 const hasToc = sections.length >= 3;
 ---
 
@@ -55,10 +57,18 @@ const hasToc = sections.length >= 3;
         <nav class="post-toc" aria-label="目录">
           <p class="post-toc-title">目录</p>
           <ul>
-            {sections.map(({ slug, text }) => (
-              <li><a href={`#${encodeURIComponent(slug)}`}>{text}</a></li>
+            {sections.map(({ href, text }) => (
+              <li><a href={href}>{text}</a></li>
             ))}
           </ul>
+          <details class="post-toc-disclosure">
+            <summary>目录</summary>
+            <ul>
+              {sections.map(({ href, text }) => (
+                <li><a href={href}>{text}</a></li>
+              ))}
+            </ul>
+          </details>
         </nav>
       )}
 
