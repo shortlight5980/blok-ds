@@ -8,6 +8,24 @@ const posts = await getPosts();
 ---
 
 <BaseLayout home>
+  <canvas slot="page-background" class="ascii-ocean" aria-hidden="true"></canvas>
+  <button
+    slot="page-background"
+    class="ascii-ocean-toggle"
+    type="button"
+    aria-label="暂停海洋动画"
+    aria-pressed="false"
+    data-paused="false"
+  >
+    <svg class="pause-icon" viewBox="0 0 16 16" aria-hidden="true">
+      <rect x="3" y="2.5" width="3" height="11" rx="1"></rect>
+      <rect x="10" y="2.5" width="3" height="11" rx="1"></rect>
+    </svg>
+    <svg class="play-icon" viewBox="0 0 16 16" aria-hidden="true">
+      <path d="M4 2.5a.75.75 0 0 1 1.16-.63l7.5 5.5a.78.78 0 0 1 0 1.26l-7.5 5.5A.75.75 0 0 1 4 13.5v-11Z"></path>
+    </svg>
+  </button>
+
   {posts.length === 0 ? (
     <p class="empty">还没有文章。</p>
   ) : (
@@ -37,3 +55,440 @@ const posts = await getPosts();
     </ul>
   )}
 </BaseLayout>
+
+<script>
+  (() => {
+    const canvas = document.querySelector('.ascii-ocean');
+    const toggle = document.querySelector('.ascii-ocean-toggle');
+    const site = document.querySelector('.site--home');
+
+    if (!canvas || !toggle || !site) return;
+
+    const context = canvas.getContext('2d');
+    if (!context) return;
+
+    const desktopQuery = window.matchMedia('(min-width: 1024px)');
+    const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const colorSchemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const backslash = String.fromCharCode(92);
+    const mirrorMap = {
+      '/': backslash,
+      [backslash]: '/',
+      '(': ')',
+      ')': '(',
+      '<': '>',
+      '>': '<',
+      '[': ']',
+      ']': '[',
+      '{': '}',
+      '}': '{'
+    };
+    const species = [
+      {
+        art: [
+          `               |${backslash}              `,
+          `               | ${backslash}             `,
+          `${backslash}             _|  ${backslash}_____       `,
+          ` ${backslash}       ____/        ---._  `,
+          `  >=====/      //    o     .`,
+          ` /      ${backslash}____        _____.--'`,
+          `/            ${backslash}______/          `,
+          `              ${backslash}_/              `
+        ],
+        tailColumns: 8
+      },
+      {
+        art: [
+          `           |${backslash}           `,
+          `           | ${backslash}___       `,
+          `${backslash}    ____/      ---._  `,
+          ` >==/    //    o     .`,
+          ` /   ${backslash}___      ___.----'`,
+          `/        ${backslash}____/         `
+        ],
+        tailColumns: 6
+      }
+    ];
+
+    const prepareSpecies = (item) => {
+      const width = Math.max(...item.art.map((line) => line.length));
+      const right = item.art.map((line) => line.padEnd(width, ' '));
+      const left = right.map((line) =>
+        Array.from(line)
+          .reverse()
+          .map((character) => mirrorMap[character] || character)
+          .join(''),
+      );
+      return { ...item, width, height: right.length, right, left };
+    };
+
+    const preparedSpecies = species.map(prepareSpecies);
+    const styles = getComputedStyle(document.documentElement);
+    const monoFont = styles.getPropertyValue('--mono').trim() || 'ui-monospace, monospace';
+    const state = {
+      width: 0,
+      height: 0,
+      dpr: 1,
+      fontSize: 13,
+      cellWidth: 8,
+      cellHeight: 17,
+      columns: 0,
+      rows: 0,
+      elapsed: 0,
+      lastTime: 0,
+      frameId: null,
+      resizeTimer: null,
+      desktop: desktopQuery.matches,
+      hidden: document.hidden,
+      reduced: reducedMotionQuery.matches,
+      paused: false,
+      mouse: { active: false, column: 0, row: 0, lastMove: 0 },
+      palette: {}
+    };
+    let currents = [];
+    let sharks = [];
+    let fish = [];
+    let ripples = [];
+
+    const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+    const readPalette = () => {
+      const currentStyles = getComputedStyle(document.documentElement);
+      state.palette = {
+        shark: currentStyles.getPropertyValue('--ocean-shark').trim(),
+        sharkDeep: currentStyles.getPropertyValue('--ocean-shark-deep').trim(),
+        fish: currentStyles.getPropertyValue('--ocean-fish').trim(),
+        current: currentStyles.getPropertyValue('--ocean-current').trim(),
+        ripple: currentStyles.getPropertyValue('--ocean-ripple').trim()
+      };
+    };
+
+    const setCanvasFont = () => {
+      context.font = `400 ${state.fontSize}px ${monoFont}`;
+      context.textBaseline = 'top';
+    };
+
+    const resetEntities = () => {
+      const speckCharacters = ['.', '·', '~', ','];
+      const speckCount = Math.min(48, Math.max(18, Math.floor((state.columns * state.rows) / 180)));
+      currents = Array.from({ length: speckCount }, (_, index) => ({
+        x: Math.random() * state.columns,
+        y: Math.random() * state.rows,
+        speed: 0.35 + Math.random() * 0.75,
+        character: speckCharacters[index % speckCharacters.length]
+      }));
+
+      sharks = [
+        {
+          species: preparedSpecies[0],
+          x: state.columns * 0.04,
+          y: state.rows * 0.22,
+          direction: 1,
+          speed: 2.1,
+          phase: 0.4,
+          tailFrequency: 3.2,
+          bobFrequency: 0.65,
+          bobAmount: 0.65,
+          depth: 'primary'
+        },
+        {
+          species: preparedSpecies[1],
+          x: state.columns * 0.9,
+          y: state.rows * 0.66,
+          direction: -1,
+          speed: 2.6,
+          phase: 2.1,
+          tailFrequency: 4,
+          bobFrequency: 0.85,
+          bobAmount: 0.55,
+          depth: 'deep'
+        }
+      ];
+
+      const schools = [
+        { centerX: state.columns * 0.13, centerY: state.rows * 0.72, direction: 1 },
+        { centerX: state.columns * 0.87, centerY: state.rows * 0.3, direction: -1 }
+      ];
+      fish = schools.flatMap((school) =>
+        Array.from({ length: 5 }, (_, index) => ({
+          x: school.centerX + (Math.random() - 0.5) * 12,
+          y: school.centerY + (Math.random() - 0.5) * 7,
+          direction: school.direction,
+          speed: 2.2 + Math.random() * 0.9,
+          verticalSpeed: (Math.random() - 0.5) * 0.5,
+          phase: Math.random() * Math.PI * 2,
+          rightCharacter: index % 3 === 0 ? '><' : index % 2 === 0 ? '>>' : '·>',
+          leftCharacter: index % 3 === 0 ? '<><' : index % 2 === 0 ? '<<' : '<·'
+        })),
+      );
+      ripples = [];
+    };
+
+    const resize = () => {
+      state.desktop = desktopQuery.matches && window.innerWidth >= 1024;
+      state.width = window.innerWidth;
+      state.height = window.innerHeight;
+      state.dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.max(1, Math.floor(state.width * state.dpr));
+      canvas.height = Math.max(1, Math.floor(state.height * state.dpr));
+      canvas.style.width = `${state.width}px`;
+      canvas.style.height = `${state.height}px`;
+      context.setTransform(state.dpr, 0, 0, state.dpr, 0, 0);
+      state.fontSize = state.width < 1200 ? 12 : 13;
+      setCanvasFont();
+      state.cellWidth = Math.max(7, context.measureText('M').width * 1.02);
+      state.cellHeight = Math.round(state.fontSize * 1.35);
+      state.columns = Math.ceil(state.width / state.cellWidth);
+      state.rows = Math.ceil(state.height / state.cellHeight);
+      resetEntities();
+    };
+
+    const clearCanvas = () => {
+      context.clearRect(0, 0, state.width, state.height);
+    };
+
+    const drawCharacter = (character, column, row) => {
+      if (column < 0 || column >= state.columns || row < 0 || row >= state.rows) return;
+      context.fillText(character, column * state.cellWidth, row * state.cellHeight);
+    };
+
+    const update = (delta) => {
+      state.elapsed += delta;
+      if (state.mouse.active && state.elapsed - state.mouse.lastMove > 2) {
+        state.mouse.active = false;
+      }
+
+      currents.forEach((current) => {
+        current.x += current.speed * delta;
+        if (current.x > state.columns + 2) {
+          current.x = -2;
+          current.y = Math.random() * state.rows;
+        }
+      });
+
+      sharks.forEach((shark) => {
+        shark.x += shark.direction * shark.speed * delta;
+        const padding = shark.species.width + 5;
+        if (shark.direction === 1 && shark.x > state.columns + 5) {
+          shark.x = -padding;
+          shark.y = clamp(state.rows * (0.14 + Math.random() * 0.7), 3, state.rows - shark.species.height - 3);
+        }
+        if (shark.direction === -1 && shark.x < -padding) {
+          shark.x = state.columns + 5;
+          shark.y = clamp(state.rows * (0.14 + Math.random() * 0.7), 3, state.rows - shark.species.height - 3);
+        }
+      });
+
+      fish.forEach((smallFish) => {
+        smallFish.verticalSpeed += Math.sin(state.elapsed * 1.6 + smallFish.phase) * 0.45 * delta;
+        if (state.mouse.active) {
+          const columnDistance = smallFish.x - state.mouse.column;
+          const rowDistance = (smallFish.y - state.mouse.row) * 1.7;
+          const distance = Math.hypot(columnDistance, rowDistance);
+          if (distance < 15 && distance > 0.1) {
+            const force = ((15 - distance) / 15) * 7;
+            smallFish.x += (columnDistance / distance) * force * delta;
+            smallFish.y += (rowDistance / distance) * force * delta * 0.55;
+          }
+        }
+        smallFish.y += smallFish.verticalSpeed * delta;
+        smallFish.x += smallFish.direction * smallFish.speed * delta;
+        if (smallFish.x > state.columns + 4) smallFish.x = -4;
+        if (smallFish.x < -4) smallFish.x = state.columns + 4;
+        if (smallFish.y < 2) {
+          smallFish.y = 2;
+          smallFish.verticalSpeed = Math.abs(smallFish.verticalSpeed);
+        }
+        if (smallFish.y > state.rows - 2) {
+          smallFish.y = state.rows - 2;
+          smallFish.verticalSpeed = -Math.abs(smallFish.verticalSpeed);
+        }
+      });
+
+      ripples = ripples.filter((ripple) => {
+        ripple.radius += ripple.speed * delta;
+        return ripple.radius < ripple.maxRadius;
+      });
+    };
+
+    const render = () => {
+      clearCanvas();
+      setCanvasFont();
+
+      context.fillStyle = state.palette.current;
+      currents.forEach((current) => {
+        drawCharacter(current.character, Math.floor(current.x), Math.floor(current.y));
+      });
+
+      context.fillStyle = state.palette.fish;
+      fish.forEach((smallFish) => {
+        const character = smallFish.direction === 1 ? smallFish.rightCharacter : smallFish.leftCharacter;
+        const column = Math.round(smallFish.x);
+        const row = Math.round(smallFish.y);
+        Array.from(character).forEach((item, index) => drawCharacter(item, column + index, row));
+      });
+
+      sharks.forEach((shark) => {
+        context.fillStyle = shark.depth === 'deep' ? state.palette.sharkDeep : state.palette.shark;
+        const art = shark.direction === 1 ? shark.species.right : shark.species.left;
+        const baseColumn = Math.round(shark.x);
+        const baseRow = Math.round(
+          shark.y + Math.sin(state.elapsed * shark.bobFrequency + shark.phase) * shark.bobAmount,
+        );
+        art.forEach((line, rowIndex) => {
+          Array.from(line).forEach((character, columnIndex) => {
+            if (character === ' ') return;
+            const distanceFromTail = shark.direction === 1
+              ? columnIndex
+              : shark.species.width - 1 - columnIndex;
+            const tailFactor = Math.max(0, (shark.species.tailColumns - distanceFromTail) / shark.species.tailColumns);
+            const tailOffset = Math.round(
+              Math.sin(state.elapsed * shark.tailFrequency + shark.phase - distanceFromTail * 0.42)
+              * tailFactor
+              * 0.9,
+            );
+            drawCharacter(character, baseColumn + columnIndex, baseRow + rowIndex + tailOffset);
+          });
+        });
+      });
+
+      context.fillStyle = state.palette.ripple;
+      const characterAspect = state.cellHeight / state.cellWidth;
+      ripples.forEach((ripple) => {
+        const progress = ripple.radius / ripple.maxRadius;
+        const character = progress < 0.32 ? 'o' : progress < 0.7 ? '~' : '·';
+        const steps = Math.max(10, Math.floor(ripple.radius * 4));
+        for (let index = 0; index < steps; index += 1) {
+          const angle = (index / steps) * Math.PI * 2;
+          const column = Math.round(ripple.column + Math.cos(angle) * ripple.radius * characterAspect);
+          const row = Math.round(ripple.row + Math.sin(angle) * ripple.radius);
+          drawCharacter(character, column, row);
+        }
+      });
+    };
+
+    const canAnimate = () => state.desktop && !state.hidden && !state.reduced && !state.paused;
+
+    const stop = () => {
+      if (state.frameId !== null) {
+        cancelAnimationFrame(state.frameId);
+        state.frameId = null;
+      }
+    };
+
+    const frame = (time) => {
+      state.frameId = null;
+      if (!canAnimate()) return;
+      const delta = Math.min(0.05, Math.max(0, (time - state.lastTime) / 1000));
+      state.lastTime = time;
+      update(delta);
+      render();
+      state.frameId = requestAnimationFrame(frame);
+    };
+
+    const start = () => {
+      if (!canAnimate() || state.frameId !== null) return;
+      state.lastTime = performance.now();
+      state.frameId = requestAnimationFrame(frame);
+    };
+
+    const syncRuntime = () => {
+      state.desktop = desktopQuery.matches && window.innerWidth >= 1024;
+      state.reduced = reducedMotionQuery.matches;
+      if (!state.desktop || state.reduced) {
+        stop();
+        state.mouse.active = false;
+        clearCanvas();
+        return;
+      }
+      if (!canAnimate()) {
+        stop();
+        render();
+        return;
+      }
+      start();
+    };
+
+    const isSideWhitespace = (target, clientX) => {
+      if (toggle.contains(target) || site.contains(target)) return false;
+      const bounds = site.getBoundingClientRect();
+      return clientX < bounds.left || clientX > bounds.right;
+    };
+
+    const updatePointer = (event) => {
+      if (!state.desktop || state.reduced || !isSideWhitespace(event.target, event.clientX)) {
+        state.mouse.active = false;
+        return;
+      }
+      state.mouse.column = event.clientX / state.cellWidth;
+      state.mouse.row = event.clientY / state.cellHeight;
+      state.mouse.lastMove = state.elapsed;
+      state.mouse.active = true;
+    };
+
+    const spawnRipple = (event) => {
+      if (
+        !state.desktop
+        || state.hidden
+        || state.reduced
+        || state.paused
+        || !isSideWhitespace(event.target, event.clientX)
+      ) return;
+      ripples.push({
+        column: Math.round(event.clientX / state.cellWidth),
+        row: Math.round(event.clientY / state.cellHeight),
+        radius: 0.5,
+        maxRadius: 7 + Math.random() * 3,
+        speed: 9
+      });
+      if (!canAnimate()) render();
+    };
+
+    readPalette();
+    resize();
+    syncRuntime();
+
+    toggle.addEventListener('click', () => {
+      state.paused = !state.paused;
+      toggle.dataset.paused = String(state.paused);
+      toggle.setAttribute('aria-pressed', String(state.paused));
+      syncRuntime();
+    });
+
+    window.addEventListener('resize', () => {
+      window.clearTimeout(state.resizeTimer);
+      state.resizeTimer = window.setTimeout(() => {
+        resize();
+        syncRuntime();
+      }, 120);
+    }, { passive: true });
+
+    window.addEventListener('pointermove', updatePointer, { passive: true });
+    window.addEventListener('click', spawnRipple, { passive: true });
+    document.addEventListener('visibilitychange', () => {
+      state.hidden = document.hidden;
+      syncRuntime();
+    });
+
+    const handleMediaChange = () => {
+      const wasDesktop = state.desktop;
+      readPalette();
+      state.reduced = reducedMotionQuery.matches;
+      if (desktopQuery.matches !== wasDesktop) resize();
+      syncRuntime();
+    };
+    desktopQuery.addEventListener('change', handleMediaChange);
+    reducedMotionQuery.addEventListener('change', handleMediaChange);
+    colorSchemeQuery.addEventListener('change', handleMediaChange);
+
+    const themeObserver = new MutationObserver(() => {
+      readPalette();
+      if (state.desktop && !state.reduced) render();
+    });
+    themeObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme']
+    });
+    toggle.classList.add('is-ready');
+  })();
+</script>
