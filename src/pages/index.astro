@@ -9,22 +9,6 @@ const posts = await getPosts();
 
 <BaseLayout home>
   <canvas slot="page-background" class="ascii-ocean" aria-hidden="true"></canvas>
-  <button
-    slot="page-background"
-    class="ascii-ocean-toggle"
-    type="button"
-    aria-label="暂停海洋动画"
-    aria-pressed="false"
-    data-paused="false"
-  >
-    <svg class="pause-icon" viewBox="0 0 16 16" aria-hidden="true">
-      <rect x="3" y="2.5" width="3" height="11" rx="1"></rect>
-      <rect x="10" y="2.5" width="3" height="11" rx="1"></rect>
-    </svg>
-    <svg class="play-icon" viewBox="0 0 16 16" aria-hidden="true">
-      <path d="M4 2.5a.75.75 0 0 1 1.16-.63l7.5 5.5a.78.78 0 0 1 0 1.26l-7.5 5.5A.75.75 0 0 1 4 13.5v-11Z"></path>
-    </svg>
-  </button>
 
   {posts.length === 0 ? (
     <p class="empty">还没有文章。</p>
@@ -59,10 +43,9 @@ const posts = await getPosts();
 <script>
   (() => {
     const canvas = document.querySelector('.ascii-ocean');
-    const toggle = document.querySelector('.ascii-ocean-toggle');
     const site = document.querySelector('.site--home');
 
-    if (!canvas || !toggle || !site) return;
+    if (!canvas || !site) return;
 
     const context = canvas.getContext('2d');
     if (!context) return;
@@ -141,7 +124,6 @@ const posts = await getPosts();
       desktop: desktopQuery.matches,
       hidden: document.hidden,
       reduced: reducedMotionQuery.matches,
-      paused: false,
       mouse: { active: false, column: 0, row: 0, lastMove: 0 },
       palette: {}
     };
@@ -367,7 +349,7 @@ const posts = await getPosts();
       });
     };
 
-    const canAnimate = () => state.desktop && !state.hidden && !state.reduced && !state.paused;
+    const canAnimate = () => state.desktop && !state.hidden && !state.reduced;
 
     const stop = () => {
       if (state.frameId !== null) {
@@ -410,7 +392,7 @@ const posts = await getPosts();
     };
 
     const isSideWhitespace = (target, clientX) => {
-      if (toggle.contains(target) || site.contains(target)) return false;
+      if (site.contains(target)) return false;
       const bounds = site.getBoundingClientRect();
       return clientX < bounds.left || clientX > bounds.right;
     };
@@ -427,13 +409,7 @@ const posts = await getPosts();
     };
 
     const spawnRipple = (event) => {
-      if (
-        !state.desktop
-        || state.hidden
-        || state.reduced
-        || state.paused
-        || !isSideWhitespace(event.target, event.clientX)
-      ) return;
+      if (!canAnimate() || !isSideWhitespace(event.target, event.clientX)) return;
       ripples.push({
         column: Math.round(event.clientX / state.cellWidth),
         row: Math.round(event.clientY / state.cellHeight),
@@ -441,19 +417,11 @@ const posts = await getPosts();
         maxRadius: 7 + Math.random() * 3,
         speed: 9
       });
-      if (!canAnimate()) render();
     };
 
     readPalette();
     resize();
     syncRuntime();
-
-    toggle.addEventListener('click', () => {
-      state.paused = !state.paused;
-      toggle.dataset.paused = String(state.paused);
-      toggle.setAttribute('aria-pressed', String(state.paused));
-      syncRuntime();
-    });
 
     window.addEventListener('resize', () => {
       window.clearTimeout(state.resizeTimer);
@@ -489,6 +457,5 @@ const posts = await getPosts();
       attributes: true,
       attributeFilter: ['data-theme']
     });
-    toggle.classList.add('is-ready');
   })();
 </script>
