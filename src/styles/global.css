@@ -135,47 +135,6 @@ a:hover {
   display: none;
 }
 
-.ascii-ocean-toggle {
-  display: none;
-  position: fixed;
-  right: max(1rem, calc((100vw - var(--content-width) - 3rem) / 2 - 3rem));
-  bottom: 1.5rem;
-  z-index: 2;
-  align-items: center;
-  justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
-  padding: 0;
-  border: 1px solid var(--rule);
-  border-radius: 50%;
-  background: var(--bg);
-  color: var(--muted);
-  cursor: pointer;
-}
-
-.ascii-ocean-toggle:hover {
-  color: var(--fg);
-}
-
-.ascii-ocean-toggle svg {
-  display: block;
-  width: 1rem;
-  height: 1rem;
-  fill: currentColor;
-}
-
-.ascii-ocean-toggle .play-icon {
-  display: none;
-}
-
-.ascii-ocean-toggle[data-paused="true"] .pause-icon {
-  display: none;
-}
-
-.ascii-ocean-toggle[data-paused="true"] .play-icon {
-  display: block;
-}
-
 @media (min-width: 1024px) {
   .ascii-ocean {
     position: fixed;
@@ -185,10 +144,6 @@ a:hover {
     width: 100vw;
     height: 100vh;
     pointer-events: none;
-  }
-
-  .ascii-ocean-toggle.is-ready {
-    display: inline-flex;
   }
 
   .site--home::before,
@@ -214,8 +169,7 @@ a:hover {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ascii-ocean,
-  .ascii-ocean-toggle {
+  .ascii-ocean {
     display: none !important;
   }
 }
