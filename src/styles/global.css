@@ -250,6 +250,7 @@ a:hover {
 .site-header nav {
   flex: none;
   display: flex;
+  align-items: center;
   gap: 1.25rem;
   font-size: 0.85rem;
   color: var(--muted);
@@ -320,10 +321,11 @@ a:hover {
 }
 
 .theme-toggle-track {
-  display: block;
+  display: flex;
+  align-items: center;
   width: 2.25rem;
   height: 1.25rem;
-  padding: 0.15rem;
+  padding-inline: 0.15rem;
   border: 1px solid var(--rule);
   border-radius: 999px;
   background: var(--rule);
